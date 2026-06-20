@@ -1,0 +1,4 @@
+You are the BUILDER (model: {{BUILDER}}). The CRITIC's red-team of your plan is in .duet/plan-review.md.
+Update .duet/plan.md to incorporate the valid points. For any point you reject, add a short
+"Rejected: <reason>" note under the relevant section so the disagreement is on record.
+Keep the plan tight. Output a one-line confirmation when done.

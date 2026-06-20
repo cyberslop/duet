@@ -1,0 +1,15 @@
+[package]
+name = "duet-core"
+version = "0.1.0"
+edition = "2021"
+description = "duet engine, event model, agents, advisor — provider/domain kernel"
+
+[lib]
+name = "duet_core"
+path = "src/lib.rs"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+ureq = { workspace = true }

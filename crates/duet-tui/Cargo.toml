@@ -1,0 +1,16 @@
+[package]
+name = "duet-tui"
+version = "0.1.0"
+edition = "2021"
+description = "duet ratatui conversation viewer + live TUI"
+
+[lib]
+name = "duet_tui"
+path = "src/lib.rs"
+
+[dependencies]
+duet-core = { path = "../duet-core" }
+ratatui = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }

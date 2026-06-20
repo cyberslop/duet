@@ -1,0 +1,39 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict", "summary", "findings"],
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": ["approve", "request_changes"],
+      "description": "approve only if there are zero blocker/major findings"
+    },
+    "summary": {
+      "type": "string",
+      "description": "1-3 sentence overall assessment of the diff"
+    },
+    "findings": {
+      "type": "array",
+      "description": "Concrete, line-citable issues. Empty array means a clean diff.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "file", "line", "issue", "why_it_matters", "suggested_fix"],
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": ["blocker", "major", "minor", "nit"]
+          },
+          "file": { "type": "string" },
+          "line": {
+            "type": "integer",
+            "description": "Primary line number in the diff; use 0 if not applicable"
+          },
+          "issue": { "type": "string" },
+          "why_it_matters": { "type": "string" },
+          "suggested_fix": { "type": "string" }
+        }
+      }
+    }
+  }
+}

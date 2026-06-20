@@ -1,0 +1,11 @@
+You are the CRITIC (model: {{CRITIC}}). The BUILDER (a different model, {{BUILDER}}) wrote an implementation
+plan in .duet/plan.md for this task:
+
+{{TASK}}
+
+Read .duet/plan.md and red-team it. Look for: wrong assumptions, missing edge cases, a simpler or safer
+alternative approach, security or performance concerns, parts that cannot be tested, hidden complexity,
+and scope creep or scope gaps. Cite the specific part of the plan for each point.
+
+If the plan is genuinely solid, say so and list only real concerns — do not manufacture problems.
+Write a concise, prioritized markdown critique. That critique is your only output.

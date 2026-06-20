@@ -1,0 +1,17 @@
+You are the BUILDER (model: {{BUILDER}}) in a two-model duet. The CRITIC (a different model, {{CRITIC}})
+reviewed your work. Their structured findings are in this file:
+  .duet/findings-{{ROUND}}.json
+
+Work through every finding:
+- blocker / major: FIX it properly in the code. Do not paper over it or merely silence a symptom.
+- minor / nit: fix when it is low-risk and quick.
+- If you genuinely, technically disagree with a finding, do NOT change code for it. Instead append a line
+  to .duet/response-{{ROUND}}.md in the form:  DISMISSED [<file>] — <one-line technical reason>
+
+Then:
+- Run the tests: {{TEST}}
+- Iterate until they pass.
+- Commit your changes with a message summarizing what you fixed (and what you dismissed) this round.
+
+Keep changes minimal and scoped to the findings. Output a one-paragraph summary of what you changed
+and what (if anything) you dismissed and why.

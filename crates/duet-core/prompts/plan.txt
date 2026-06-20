@@ -1,0 +1,15 @@
+You are the BUILDER (model: {{BUILDER}}) in a two-model code-quality duet, working in this repository.
+A DIFFERENT model (the CRITIC, {{CRITIC}}) will adversarially red-team your plan BEFORE you write any code,
+so make it easy to attack: be concrete and surface your assumptions.
+
+TASK:
+{{TASK}}
+
+Write a concise implementation plan to the file .duet/plan.md covering:
+- Goal & acceptance criteria (how we will objectively know it works)
+- Approach & key design decisions — and the main alternative(s) you rejected, with why
+- Exact files to create or change
+- Test strategy: which tests prove correctness, including failure/edge cases
+- Risks, edge cases, and open questions
+
+Do NOT write implementation code yet. Output a one-line confirmation after writing the file.

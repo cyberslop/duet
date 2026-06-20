@@ -1,0 +1,56 @@
+# Built-in duet profiles. Override or add your own in
+#   $DUET_PROFILES  or  ~/.config/duet/profiles.toml
+# (a profile with the same name wins). role -> model is data: anthropic (claude),
+# openai (codex), or a local OpenAI-compatible model (local).
+
+[[profile]]
+name = "code-frontier"
+description = "Default: Claude builds, Codex critiques, fresh-eyes swap at the end"
+builder = "claude"
+critic = "codex"
+rounds = 3
+swap = true
+
+[[profile]]
+name = "code-local-critic"
+description = "Claude builds; a free local model gate-keeps every round"
+builder = "claude"
+critic = "local"
+rounds = 2
+
+[[profile]]
+name = "code-local-triage"
+description = "Cheapest: Codex builds, local model triages in a single round"
+builder = "codex"
+critic = "local"
+rounds = 1
+no_plan = true
+
+[[profile]]
+name = "code-thorough"
+description = "Max rigor: plan + Codex critique, 4 rounds, fresh-eyes swap"
+builder = "claude"
+critic = "codex"
+rounds = 4
+swap = true
+
+[[profile]]
+name = "research-rigorous"
+description = "Cited research: Claude gathers, Codex verifies claims against sources"
+builder = "claude"
+critic = "codex"
+domain = "research"
+rounds = 2
+
+[[profile]]
+name = "security-harness"
+description = "Forensics/RE tooling: Claude builds, Codex reviews soundness + operational safety"
+builder = "claude"
+critic = "codex"
+domain = "security"
+rounds = 3
+
+# Cost-tiered pattern (the routing the noisy-local-critic run motivated): use
+# code-local-critic for bulk review rounds, then a final code-frontier pass for
+# the deciding sign-off. Domains research/security are placeholders until those
+# domains land.
