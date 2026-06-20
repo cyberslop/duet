@@ -1,0 +1,17 @@
+<svg width="360" height="120" viewBox="0 0 360 120" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="duet">
+  <defs>
+    <linearGradient id="duet-violet-lk" x1="20" y1="22" x2="58" y2="74" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B89BFF"></stop>
+      <stop offset="1" stop-color="#9F7BFF"></stop>
+    </linearGradient>
+    <linearGradient id="duet-azure-lk" x1="92" y1="98" x2="54" y2="46" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3AA0FF"></stop>
+      <stop offset="1" stop-color="#5AB0FF"></stop>
+    </linearGradient>
+  </defs>
+  <g transform="translate(8,12)">
+    <path d="M48 8 A32 32 0 0 0 48 72" stroke="url(#duet-violet-lk)" stroke-width="15" stroke-linecap="round"></path>
+    <path d="M48 88 A32 32 0 0 0 48 24" stroke="url(#duet-azure-lk)" stroke-width="15" stroke-linecap="round"></path>
+  </g>
+  <text x="116" y="76" font-family="&#39;JetBrains Mono&#39;,&#39;SF Mono&#39;,ui-monospace,monospace" font-size="56" font-weight="700" letter-spacing="-1" fill="#ECEEF6">duet</text>
+</svg>

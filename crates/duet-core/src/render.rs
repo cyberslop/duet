@@ -56,7 +56,7 @@ fn flat(s: &str, max: usize) -> String {
 /// produce no visible line (e.g. empty text).
 pub fn render_line(th: &Theme, model: Model, ev: &AgentEvent) -> Option<String> {
     let c = model.color(th);
-    let (rst, dim, ok) = (th.rst, th.dim, th.ok);
+    let (rst, dim, ok, err) = (th.rst, th.dim, th.ok, th.err);
     let lab = format!("{:<6}", model.label());
     let bar = format!("{c}┃{rst}");
 
@@ -78,7 +78,11 @@ pub fn render_line(th: &Theme, model: Model, ev: &AgentEvent) -> Option<String> 
         }
         AgentEvent::Command { cmdline, exit } => {
             let body = flat(cmdline, 160);
-            let ex = exit.map(|e| format!("  (exit {e})")).unwrap_or_default();
+            let ex = match exit {
+                Some(0) => format!("  {ok}(exit 0){rst}"),
+                Some(e) => format!("  {err}(exit {e}){rst}"),
+                None => String::new(),
+            };
             format!("{bar} {c}{lab}{rst} {c}⚙{rst} {body}{ex}")
         }
         AgentEvent::FileChange(paths) => {

@@ -44,7 +44,7 @@ impl Reporter for ConsoleReporter {
     fn phase(&self, label: &str) {
         let th = &self.theme;
         println!("{}{}{}", th.dim, "─".repeat(60), th.rst);
-        println!("{}▶ {label}{}", th.bold, th.rst);
+        println!("{}▸ {label}{}", th.bold, th.rst);
         println!("{}{}{}", th.dim, "─".repeat(60), th.rst);
     }
     fn sys(&self, kind: Sys, text: &str) {

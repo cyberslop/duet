@@ -3,9 +3,9 @@
 //! input box at the bottom. The UI lives here; the *logic* (what commands mean,
 //! how to run the engine) is a `ShellController` supplied by the CLI.
 
-use crate::{row_line, Row};
+use crate::{row_line, theme, Row};
 use anyhow::Result;
-use duet_core::report::{Sys, UiMsg};
+use duet_core::report::UiMsg;
 use duet_core::style::Theme;
 use ratatui::backend::CrosstermBackend;
 use ratatui::crossterm::{
@@ -14,7 +14,7 @@ use ratatui::crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::layout::{Constraint, Layout, Position, Rect};
-use ratatui::style::{Color, Modifier, Style};
+use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph};
 use ratatui::{Frame, Terminal};
@@ -114,12 +114,12 @@ impl Shell {
     fn apply(&mut self, msg: UiMsg) {
         match msg {
             UiMsg::Phase(p) => self.rows.push(Row::Phase(p)),
-            UiMsg::Sys(kind, t) => self.rows.push(Row::Note(format!("{}{t}", sys_prefix(kind)))),
+            UiMsg::Sys(kind, t) => self.rows.push(Row::Sys(kind, t)),
             UiMsg::Say(m, t) => self.rows.push(Row::Note(format!("[{}] {t}", m.label()))),
             UiMsg::Event(m, ev) => self.rows.push(Row::Event(m, ev)),
             UiMsg::Findings(v) => {
                 for f in v {
-                    self.rows.push(Row::Note(format!("  [{}] {}:{} — {}", f.sev, f.file, f.line, f.issue)));
+                    self.rows.push(Row::Finding(f));
                 }
             }
             UiMsg::Status(_) | UiMsg::Done(_) => {}
@@ -131,14 +131,6 @@ impl Shell {
         self.input.clear();
         self.cursor = 0;
         s
-    }
-}
-
-fn sys_prefix(kind: Sys) -> &'static str {
-    match kind {
-        Sys::Note => "  ",
-        Sys::Ok => "✓ ",
-        Sys::Warn => "! ",
     }
 }
 
@@ -171,8 +163,8 @@ fn event_loop(
                     Ok(UiMsg::Done(code)) => {
                         if !sh.chatting {
                             match code {
-                                0 => sh.note("🎵 in harmony — converged ♪"),
-                                2 => sh.note("🎶 still tuning — re-run, or /review to continue"),
+                                0 => sh.rows.push(Row::Verdict(true, "🎵 in harmony — converged ♪".into())),
+                                2 => sh.rows.push(Row::Verdict(false, "🎶 still tuning — re-run, or /review to continue".into())),
                                 _ => {} // errored: the warning above already explains why
                             }
                         }
@@ -350,11 +342,8 @@ fn accept_menu(sh: &mut Shell, ctrl: &dyn ShellController) {
     sh.menu_idx = 0;
 }
 
-// Brand palette (cool: periwinkle accent, purple, blue).
-const ACCENT: Color = Color::Indexed(105); // periwinkle (badge, border)
-const PROMPT_FG: Color = Color::Indexed(141); // purple
-
-/// One row of equalizer bars — a travelling wave colored blue → periwinkle → purple.
+/// One row of equalizer bars — a travelling wave colored blue → periwinkle →
+/// violet by amplitude (the design-system Equalizer).
 fn eq_bars(frame: usize, width: u16) -> Line<'static> {
     const BLOCKS: [char; 8] = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
     let mut spans = vec![Span::raw("   ")];
@@ -363,14 +352,40 @@ fn eq_bars(frame: usize, width: u16) -> Line<'static> {
         let v = ((x as f64) * 0.5 + (frame as f64) * 0.45).sin()
             + 0.5 * ((x as f64) * 0.23 - (frame as f64) * 0.31).sin();
         let h = ((((v + 1.5) / 3.0) * 7.0).round() as usize).min(7);
-        let color = match h {
-            0..=2 => Color::Indexed(39),  // blue (quiet)
-            3..=5 => Color::Indexed(105), // periwinkle
-            _ => Color::Indexed(141),     // purple (peak)
-        };
-        spans.push(Span::styled(BLOCKS[h].to_string(), Style::default().fg(color)));
+        spans.push(Span::styled(BLOCKS[h].to_string(), Style::default().fg(theme::eq_tier(h))));
     }
     Line::from(spans)
+}
+
+/// Color each voice name (claude / codex / local) in a header string by its hue,
+/// leaving separators and emoji in the secondary text color.
+fn voice_spans(s: &str) -> Vec<Span<'static>> {
+    let sec = Style::default().fg(theme::secondary());
+    let mut spans: Vec<Span<'static>> = Vec::new();
+    let mut buf = String::new();
+    for token in s.split_inclusive(' ') {
+        let word = token.trim_end();
+        let voice = match word {
+            "claude" => Some(theme::claude()),
+            "codex" => Some(theme::codex()),
+            "local" => Some(theme::local()),
+            _ => None,
+        };
+        match voice {
+            Some(c) => {
+                if !buf.is_empty() {
+                    spans.push(Span::styled(std::mem::take(&mut buf), sec));
+                }
+                spans.push(Span::styled(word.to_string(), Style::default().fg(c).add_modifier(Modifier::BOLD)));
+                buf.push_str(&token[word.len()..]); // trailing space(s), if any
+            }
+            None => buf.push_str(token),
+        }
+    }
+    if !buf.is_empty() {
+        spans.push(Span::styled(buf, sec));
+    }
+    spans
 }
 
 /// Approximate terminal column width of a char (emoji ≈ 2, else 1).
@@ -454,21 +469,26 @@ fn draw(f: &mut Frame, sh: &mut Shell, ctrl: &dyn ShellController, spin: usize, 
     let conv = chunks[1];
     let (eq_chunk, input) = if eq.is_some() { (Some(chunks[2]), chunks[3]) } else { (None, chunks[2]) };
 
-    // header
-    let status = if sh.running.is_some() {
-        format!("{} performing…", SPIN[spin % SPIN.len()])
+    // header — brand badge · the ensemble (voices colored) · right-aligned status
+    let mut left = vec![
+        Span::styled(" ♫ duet ", Style::default().fg(theme::on_accent()).bg(theme::periwinkle()).add_modifier(Modifier::BOLD)),
+        Span::raw("  "),
+    ];
+    left.extend(voice_spans(&ctrl.header()));
+    let (stext, sstyle) = if sh.running.is_some() {
+        (format!("{} performing…", SPIN[spin % SPIN.len()]), Style::default().fg(theme::periwinkle()))
     } else {
-        "ready".into()
+        ("ready".to_string(), Style::default().fg(theme::muted()))
     };
-    let header = Line::from(vec![
-        Span::styled(" ♫ duet ", Style::default().fg(Color::Black).bg(ACCENT).add_modifier(Modifier::BOLD)),
-        Span::raw(format!("  {}   ", ctrl.header())),
-        Span::styled(status, Style::default().add_modifier(Modifier::DIM)),
-    ]);
-    f.render_widget(Paragraph::new(header), chunks[0]);
+    let used: usize = left.iter().flat_map(|s| s.content.chars()).map(char_cols).sum();
+    let stat_w: usize = stext.chars().map(char_cols).sum();
+    let pad = (chunks[0].width as usize).saturating_sub(used + stat_w + 1);
+    left.push(Span::raw(" ".repeat(pad)));
+    left.push(Span::styled(stext, sstyle));
+    f.render_widget(Paragraph::new(Line::from(left)), chunks[0]);
 
     // conversation — wrapped to the pane width (exact scroll over visual lines)
-    let visual: Vec<Line> = sh.rows.iter().flat_map(|r| wrap_line(&row_line(r), conv.width)).collect();
+    let visual: Vec<Line> = sh.rows.iter().flat_map(|r| wrap_line(&row_line(r, conv.width), conv.width)).collect();
     let total = visual.len();
     let vis = conv.height as usize;
     let max = total.saturating_sub(vis);
@@ -483,18 +503,18 @@ fn draw(f: &mut Frame, sh: &mut Shell, ctrl: &dyn ShellController, spin: usize, 
     // input box
     let block = Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(ACCENT).add_modifier(Modifier::DIM));
+        .border_style(Style::default().fg(theme::periwinkle()).add_modifier(Modifier::DIM));
     let prompt = ctrl.prompt();
     let body = if sh.running.is_some() {
         Line::from(Span::styled(
             format!("{}  the ensemble is on stage…  (PgUp/PgDn scroll · Ctrl-C leave)", SPIN[spin % SPIN.len()]),
-            Style::default().add_modifier(Modifier::DIM),
+            Style::default().fg(theme::muted()),
         ))
     } else {
         let text: String = sh.input.iter().collect();
         Line::from(vec![
-            Span::styled(prompt.clone(), Style::default().fg(PROMPT_FG)),
-            Span::raw(text),
+            Span::styled(prompt.clone(), Style::default().fg(theme::claude())),
+            Span::styled(text, Style::default().fg(theme::text())),
         ])
     };
     f.render_widget(Paragraph::new(body).block(block), input);
@@ -516,8 +536,8 @@ fn draw(f: &mut Frame, sh: &mut Shell, ctrl: &dyn ShellController, spin: usize, 
         let rect = Rect { x: input.x, y: input.y - h, width: w, height: h };
         let list_items: Vec<ListItem> = items.iter().map(|s| ListItem::new(format!(" {}", s.trim()))).collect();
         let list = List::new(list_items)
-            .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(ACCENT)).title(" commands "))
-            .highlight_style(Style::default().bg(ACCENT).fg(Color::Black).add_modifier(Modifier::BOLD))
+            .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(theme::periwinkle())).title(" commands "))
+            .highlight_style(Style::default().bg(theme::periwinkle()).fg(theme::on_accent()).add_modifier(Modifier::BOLD))
             .highlight_symbol("▸");
         let mut state = ListState::default();
         state.select(Some(sh.menu_idx.min(items.len() - 1)));
