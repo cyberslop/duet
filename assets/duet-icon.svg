@@ -1,0 +1,15 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="duet app icon">
+  <defs>
+    <linearGradient id="duet-violet-ic" x1="60" y1="44" x2="132" y2="150" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B89BFF"></stop>
+      <stop offset="1" stop-color="#9F7BFF"></stop>
+    </linearGradient>
+    <linearGradient id="duet-azure-ic" x1="212" y1="226" x2="124" y2="106" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3AA0FF"></stop>
+      <stop offset="1" stop-color="#5AB0FF"></stop>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="#15171F"></rect>
+  <path d="M128 56 A56 56 0 0 0 128 168" stroke="url(#duet-violet-ic)" stroke-width="26" stroke-linecap="round"></path>
+  <path d="M128 200 A56 56 0 0 0 128 88" stroke="url(#duet-azure-ic)" stroke-width="26" stroke-linecap="round"></path>
+</svg>

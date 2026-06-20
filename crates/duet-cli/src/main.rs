@@ -287,7 +287,7 @@ fn suggest_models(domain: &str, th: &Theme) {
 
     for task in tasks_for_domain(domain) {
         let a = advise(&hw, task);
-        println!("{}▶ {:?}{}", th.bold, task, th.rst);
+        println!("{}▸ {:?}{}", th.bold, task, th.rst);
         match a.capable {
             Some(r) => println!(
                 "  {}capable local critic{} → {} {} (~{:.0} GB)\n      {}pull:{} {}   — {}",

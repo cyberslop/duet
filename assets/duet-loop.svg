@@ -1,0 +1,30 @@
+<svg width="1280" height="300" viewBox="0 0 1280 300" fill="none" xmlns="http://www.w3.org/2000/svg" font-family="'JetBrains Mono','SF Mono','Cascadia Code',ui-monospace,Menlo,Consolas,monospace">
+  <defs></defs>
+  <rect width="1280" height="300" fill="#15171F"/>
+<text x="64" y="60" fill="#AAB0C2" font-size="18" font-weight="700" text-anchor="start" letter-spacing="0" >how it works</text>
+<text x="64" y="86" fill="#6B7282" font-size="14" font-weight="400" text-anchor="start" letter-spacing="0" >plan, then build and review in a tight adversarial loop, then verify against an objective gate</text>
+  <rect x="64" y="106" width="150" height="88" rx="12" fill="rgba(135,135,255,0.10)" stroke="#8787FF" stroke-width="1.5"/>
+<text x="139.0" y="146" fill="#8787FF" font-size="20" font-weight="700" text-anchor="middle" letter-spacing="0" >plan</text>
+<text x="139.0" y="174" fill="#6B7282" font-size="13" font-weight="400" text-anchor="middle" letter-spacing="0" >+ red-team</text>
+  <line x1="214" y1="150" x2="276" y2="150" stroke="#8787FF" stroke-width="2"/>
+  <path d="M276 145 L286 150 L276 155 Z" fill="#8787FF"/>
+  <rect x="286" y="106" width="196" height="88" rx="12" fill="rgba(168,132,255,0.12)" stroke="#A884FF" stroke-width="1.5"/>
+<text x="384.0" y="146" fill="#A884FF" font-size="20" font-weight="700" text-anchor="middle" letter-spacing="0" >Build</text>
+<text x="384.0" y="174" fill="#6B7282" font-size="13" font-weight="400" text-anchor="middle" letter-spacing="0" >builder writes</text>
+<text x="518" y="155" fill="#8787FF" font-size="30" font-weight="700" text-anchor="middle" letter-spacing="0" >⇄</text>
+<text x="518" y="122" fill="#6B7282" font-size="12" font-weight="400" text-anchor="middle" letter-spacing="0" >fix</text>
+<text x="518" y="190" fill="#6B7282" font-size="12" font-weight="400" text-anchor="middle" letter-spacing="0" >review</text>
+  <rect x="554" y="106" width="196" height="88" rx="12" fill="rgba(58,160,255,0.12)" stroke="#3AA0FF" stroke-width="1.5"/>
+<text x="652.0" y="146" fill="#3AA0FF" font-size="20" font-weight="700" text-anchor="middle" letter-spacing="0" >Review</text>
+<text x="652.0" y="174" fill="#6B7282" font-size="13" font-weight="400" text-anchor="middle" letter-spacing="0" >critic objects</text>
+  <line x1="750" y1="150" x2="840" y2="150" stroke="#8787FF" stroke-width="2"/>
+  <path d="M840 145 L850 150 L840 155 Z" fill="#8787FF"/>
+  <rect x="850" y="106" width="150" height="88" rx="12" fill="rgba(0,215,215,0.10)" stroke="#00D7D7" stroke-width="1.5"/>
+<text x="925.0" y="146" fill="#00D7D7" font-size="20" font-weight="700" text-anchor="middle" letter-spacing="0" >verify</text>
+<text x="925.0" y="174" fill="#6B7282" font-size="13" font-weight="400" text-anchor="middle" letter-spacing="0" >objective gate</text>
+  <line x1="1000" y1="150" x2="1030" y2="150" stroke="#8787FF" stroke-width="2"/>
+  <path d="M1030 145 L1040 150 L1030 155 Z" fill="#8787FF"/>
+  <rect x="1040" y="106" width="176" height="88" rx="12" fill="rgba(63,185,80,0.10)" stroke="#3FB950" stroke-width="1.5"/>
+<text x="1128" y="146" fill="#3FB950" font-size="18" font-weight="700" text-anchor="middle" letter-spacing="0" >♫ in harmony</text>
+<text x="1128" y="174" fill="#6B7282" font-size="13" font-weight="400" text-anchor="middle" letter-spacing="0" >converged ♪</text>
+</svg>

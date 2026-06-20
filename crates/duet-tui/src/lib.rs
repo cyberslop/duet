@@ -9,6 +9,7 @@
 //! — used by tests and `--snapshot`, so the TUI is verifiable without a tty.
 
 mod shell;
+mod theme;
 pub use shell::{run_shell, ShellAction, ShellController};
 
 use duet_core::events::{parse_claude_line, parse_codex_line, AgentEvent};
@@ -37,6 +38,12 @@ use std::time::Duration;
 pub enum Row {
     Phase(String),
     Note(String),
+    /// An engine system line (note / ✓ ok / ! warn), colored by kind.
+    Sys(Sys, String),
+    /// One inline review finding, colored by severity.
+    Finding(FindingRow),
+    /// A convergence verdict — `true` = in harmony (ok), `false` = still tuning (warn).
+    Verdict(bool, String),
     Event(Model, AgentEvent),
 }
 
@@ -154,21 +161,13 @@ impl App {
     pub fn apply(&mut self, msg: UiMsg) {
         match msg {
             UiMsg::Phase(p) => self.rows.push(Row::Phase(p)),
-            UiMsg::Sys(kind, t) => self.rows.push(Row::Note(format!("{}{t}", sys_prefix(kind)))),
+            UiMsg::Sys(kind, t) => self.rows.push(Row::Sys(kind, t)),
             UiMsg::Say(m, t) => self.rows.push(Row::Note(format!("[{}] {t}", m.label()))),
             UiMsg::Event(m, ev) => self.rows.push(Row::Event(m, ev)),
             UiMsg::Findings(v) => self.findings = v,
             UiMsg::Status(s) => self.status = s,
             UiMsg::Done(c) => self.status = if c == 0 { "done ✓".into() } else { format!("exit {c}") },
         }
-    }
-}
-
-fn sys_prefix(kind: Sys) -> &'static str {
-    match kind {
-        Sys::Note => "  ",
-        Sys::Ok => "✓ ",
-        Sys::Warn => "! ",
     }
 }
 
@@ -199,9 +198,9 @@ fn flat(s: &str, max: usize) -> String {
 
 fn model_color(m: Model) -> Color {
     match m {
-        Model::Claude => Color::Indexed(141), // purple
-        Model::Codex => Color::Indexed(39),   // blue
-        Model::Local => Color::Indexed(44),   // teal
+        Model::Claude => theme::claude(),
+        Model::Codex => theme::codex(),
+        Model::Local => theme::local(),
     }
 }
 
@@ -261,17 +260,7 @@ fn file_icon(path: &str) -> &'static str {
 }
 
 fn file_color(path: &str) -> Color {
-    match basename(path).rsplit('.').next().unwrap_or("") {
-        "rs" => Color::Indexed(208),
-        "py" => Color::Indexed(33),
-        "md" | "markdown" => Color::Indexed(75),
-        "json" | "jsonl" => Color::Indexed(178),
-        "go" => Color::Indexed(44),
-        "sh" | "bash" | "zsh" => Color::Indexed(120),
-        "js" | "ts" | "tsx" => Color::Indexed(227),
-        "diff" | "patch" => Color::Indexed(168),
-        _ => Color::Indexed(250),
-    }
+    theme::file(basename(path).rsplit('.').next().unwrap_or(""))
 }
 
 /// Pull a `file_path` out of a tool-call input JSON, if present.
@@ -292,11 +281,34 @@ fn file_span(path: &str) -> Vec<Span<'static>> {
     ]
 }
 
-fn row_line(row: &Row) -> Line<'static> {
+/// Render one scrollback row to a styled line. `width` lets phase dividers draw
+/// a rule that fills the pane (the design-system PhaseDivider).
+fn row_line(row: &Row, width: u16) -> Line<'static> {
     let dim = Style::default().add_modifier(Modifier::DIM);
     match row {
-        Row::Phase(p) => Line::from(Span::styled(format!("── {p} ──"), dim.add_modifier(Modifier::BOLD))),
+        Row::Phase(p) => {
+            // "── {label} ───────…" — a muted, bold rule that fills the row.
+            let prefix = format!("── {p} ");
+            let fill = (width as usize).saturating_sub(prefix.chars().count()).max(2);
+            Line::from(vec![
+                Span::styled(prefix, Style::default().fg(theme::muted()).add_modifier(Modifier::BOLD)),
+                Span::styled("─".repeat(fill), Style::default().fg(theme::border())),
+            ])
+        }
         Row::Note(t) => Line::from(Span::styled(t.clone(), dim)),
+        Row::Sys(kind, t) => {
+            let (glyph, color) = match kind {
+                Sys::Note => ("  ", theme::muted()),
+                Sys::Ok => ("✓ ", theme::ok()),
+                Sys::Warn => ("! ", theme::warn()),
+            };
+            Line::from(Span::styled(format!("{glyph}{t}"), Style::default().fg(color)))
+        }
+        Row::Finding(f) => finding_line(f),
+        Row::Verdict(converged, t) => {
+            let color = if *converged { theme::ok() } else { theme::warn() };
+            Line::from(Span::styled(t.clone(), Style::default().fg(color).add_modifier(Modifier::BOLD)))
+        }
         Row::Event(m, ev) => {
             let c = model_color(*m);
             let cstyle = Style::default().fg(c);
@@ -304,24 +316,29 @@ fn row_line(row: &Row) -> Line<'static> {
             let label = Span::styled(format!("{:<6} ", m.label()), cstyle);
             let mut spans = vec![gutter, label];
             match ev {
-                AgentEvent::Message(t) => spans.push(Span::raw(flat(t, 4000))),
-                AgentEvent::Reasoning(t) => spans.push(Span::styled(flat(t, 240), dim)),
+                AgentEvent::Message(t) => spans.push(Span::styled(flat(t, 4000), Style::default().fg(theme::text()))),
+                AgentEvent::Reasoning(t) => spans.push(Span::styled(flat(t, 240), Style::default().fg(theme::muted()).add_modifier(Modifier::DIM))),
                 AgentEvent::ToolCall { name, input } => {
                     spans.push(Span::styled(format!("{} ", tool_icon(name)), cstyle));
+                    spans.push(Span::styled(format!("{name}  "), Style::default().fg(theme::secondary())));
                     if let Some(fp) = file_path_of(input) {
-                        spans.push(Span::raw(format!("{name}  ")));
                         spans.extend(file_span(&fp));
                     } else {
-                        spans.push(Span::raw(format!("{name}  {}", flat(input, 160))));
+                        spans.push(Span::styled(flat(input, 160), Style::default().fg(theme::text())));
                     }
                 }
                 AgentEvent::Command { cmdline, exit } => {
                     spans.push(Span::styled(format!("{} ", tool_icon("Bash")), cstyle));
-                    let ex = exit.map(|e| format!("  (exit {e})")).unwrap_or_default();
-                    spans.push(Span::raw(format!("{}{ex}", flat(cmdline, 200))));
+                    spans.push(Span::styled(flat(cmdline, 200), Style::default().fg(theme::text())));
+                    match exit {
+                        Some(0) => spans.push(Span::styled("  (exit 0)", Style::default().fg(theme::ok()))),
+                        Some(e) => spans.push(Span::styled(format!("  (exit {e})"), Style::default().fg(theme::err()))),
+                        None => {}
+                    }
                 }
                 AgentEvent::FileChange(p) => {
-                    spans.push(Span::styled("\u{f044} ", Style::default().fg(Color::Green)));
+                    let g = if icons_on() { "\u{f044} " } else { "✎ " };
+                    spans.push(Span::styled(g, Style::default().fg(theme::ok())));
                     for (i, path) in p.iter().enumerate() {
                         if i > 0 {
                             spans.push(Span::raw("  "));
@@ -333,7 +350,10 @@ fn row_line(row: &Row) -> Line<'static> {
                     spans.truncate(0);
                     spans.push(Span::styled(format!("┃   ↳ {}", flat(t, 200)), dim));
                 }
-                AgentEvent::Done(t) => spans.push(Span::styled(format!("\u{f00c} {t}"), Style::default().fg(Color::Green).add_modifier(Modifier::DIM))),
+                AgentEvent::Done(t) => {
+                    let g = if icons_on() { "\u{f00c} " } else { "✓ " };
+                    spans.push(Span::styled(format!("{g}{t}"), Style::default().fg(theme::ok()).add_modifier(Modifier::DIM)));
+                }
             }
             Line::from(spans)
         }
@@ -341,14 +361,11 @@ fn row_line(row: &Row) -> Line<'static> {
 }
 
 fn finding_line(f: &FindingRow) -> Line<'static> {
-    let color = match f.sev.as_str() {
-        "blocker" | "major" => Color::Red,
-        "minor" => Color::Yellow,
-        _ => Color::DarkGray,
-    };
     Line::from(vec![
-        Span::styled(format!("[{}] ", f.sev), Style::default().fg(color).add_modifier(Modifier::BOLD)),
-        Span::raw(format!("{}:{} — {}", f.file, f.line, flat(&f.issue, 200))),
+        Span::styled(format!("[{}] ", f.sev), Style::default().fg(theme::severity(&f.sev)).add_modifier(Modifier::BOLD)),
+        Span::styled(format!("{}:{} ", f.file, f.line), Style::default().fg(theme::secondary())),
+        Span::styled("— ", Style::default().fg(theme::faint())),
+        Span::styled(flat(&f.issue, 200), Style::default().fg(theme::text())),
     ])
 }
 
@@ -364,19 +381,19 @@ fn draw(f: &mut Frame, app: &mut App) {
 
     // header
     let status_color = match app.status.as_str() {
-        "approve" => Color::Green,
-        "request_changes" => Color::Yellow,
-        _ => Color::Gray,
+        "approve" => theme::ok(),
+        "request_changes" => theme::warn(),
+        _ => theme::muted(),
     };
     let header = Line::from(vec![
-        Span::styled(" duet ", Style::default().fg(Color::Black).bg(Color::Indexed(105)).add_modifier(Modifier::BOLD)),
-        Span::raw(format!(" {} ", app.title)),
-        Span::styled(format!("· {} ", app.status), Style::default().fg(status_color)),
+        Span::styled(" ♫ duet ", Style::default().fg(theme::on_accent()).bg(theme::periwinkle()).add_modifier(Modifier::BOLD)),
+        Span::styled(format!(" {} ", app.title), Style::default().fg(theme::text())),
+        Span::styled(format!("· {} ", app.status), Style::default().fg(status_color).add_modifier(Modifier::BOLD)),
     ]);
     f.render_widget(Paragraph::new(header), chunks[0]);
 
     // conversation
-    let lines: Vec<Line> = app.rows.iter().map(row_line).collect();
+    let lines: Vec<Line> = app.rows.iter().map(|r| row_line(r, chunks[1].width)).collect();
     let total = lines.len();
     let vis = chunks[1].height as usize;
     let max_scroll = total.saturating_sub(vis);

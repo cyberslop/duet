@@ -1,0 +1,56 @@
+<svg width="1280" height="640" viewBox="0 0 1280 640" fill="none" xmlns="http://www.w3.org/2000/svg" font-family="'JetBrains Mono','SF Mono','Cascadia Code',ui-monospace,Menlo,Consolas,monospace">
+  <defs><linearGradient id="wms" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A884FF"/><stop offset="0.5" stop-color="#8E92FF"/><stop offset="1" stop-color="#3AA0FF"/></linearGradient></defs>
+  <rect width="1280" height="640" fill="#15171F"/>
+  <rect x="0" y="0" width="1280" height="4" fill="#8787FF"/>
+
+  <g transform="translate(576.0,150) scale(1.0667)">
+    <defs>
+      <linearGradient id="mvs" x1="20" y1="14" x2="62" y2="70" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#B89BFF"/><stop offset="1" stop-color="#9F7BFF"/>
+      </linearGradient>
+      <linearGradient id="mas" x1="100" y1="106" x2="58" y2="50" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#3AA0FF"/><stop offset="1" stop-color="#5AB0FF"/>
+      </linearGradient>
+    </defs>
+    <path d="M60 16 A36 36 0 0 0 60 88" stroke="url(#mvs)" stroke-width="17" stroke-linecap="round"/>
+    <path d="M60 104 A36 36 0 0 0 60 32" stroke="url(#mas)" stroke-width="17" stroke-linecap="round"/>
+  </g>
+<text x="640.0" y="372" fill="url(#wms)" font-size="150" font-weight="800" letter-spacing="-3" text-anchor="middle">duet</text>
+<text x="640.0" y="430" fill="#AAB0C2" font-size="27" font-weight="500" text-anchor="middle" letter-spacing="0" >a symphony of models — many voices, one score</text>
+<text x="640.0" y="470" fill="#6B7282" font-size="18" font-weight="400" text-anchor="middle" letter-spacing="0" >one model writes · a model from a <tspan fill="#00AFFF">different lab</tspan> reviews · until they’re <tspan fill="#3FB950">in harmony</tspan></text>
+  <line x1="442.0" y1="548.5" x2="834.0" y2="548.5" stroke="#262B3A" stroke-width="1"/>
+  <g transform="translate(442.0,548)"><rect x="0" y="-50.8" width="8" height="50.8" rx="2" fill="#3AA0FF"></rect></g>
+  <g transform="translate(454.0,548)"><rect x="0" y="-60.0" width="8" height="60.0" rx="2" fill="#3F9EFF"></rect></g>
+  <g transform="translate(466.0,548)"><rect x="0" y="-66.9" width="8" height="66.9" rx="2" fill="#449DFF"></rect></g>
+  <g transform="translate(478.0,548)"><rect x="0" y="-70.0" width="8" height="70.0" rx="2" fill="#489BFF"></rect></g>
+  <g transform="translate(490.0,548)"><rect x="0" y="-68.3" width="8" height="68.3" rx="2" fill="#4D9AFF"></rect></g>
+  <g transform="translate(502.0,548)"><rect x="0" y="-62.3" width="8" height="62.3" rx="2" fill="#5298FF"></rect></g>
+  <g transform="translate(514.0,548)"><rect x="0" y="-53.5" width="8" height="53.5" rx="2" fill="#5797FF"></rect></g>
+  <g transform="translate(526.0,548)"><rect x="0" y="-44.0" width="8" height="44.0" rx="2" fill="#5C95FF"></rect></g>
+  <g transform="translate(538.0,548)"><rect x="0" y="-36.2" width="8" height="36.2" rx="2" fill="#6094FF"></rect></g>
+  <g transform="translate(550.0,548)"><rect x="0" y="-31.9" width="8" height="31.9" rx="2" fill="#6592FF"></rect></g>
+  <g transform="translate(562.0,548)"><rect x="0" y="-32.3" width="8" height="32.3" rx="2" fill="#6A90FF"></rect></g>
+  <g transform="translate(574.0,548)"><rect x="0" y="-37.2" width="8" height="37.2" rx="2" fill="#6F8FFF"></rect></g>
+  <g transform="translate(586.0,548)"><rect x="0" y="-45.4" width="8" height="45.4" rx="2" fill="#748DFF"></rect></g>
+  <g transform="translate(598.0,548)"><rect x="0" y="-54.9" width="8" height="54.9" rx="2" fill="#798CFF"></rect></g>
+  <g transform="translate(610.0,548)"><rect x="0" y="-63.4" width="8" height="63.4" rx="2" fill="#7D8AFF"></rect></g>
+  <g transform="translate(622.0,548)"><rect x="0" y="-68.8" width="8" height="68.8" rx="2" fill="#8289FF"></rect></g>
+  <g transform="translate(634.0,548)"><rect x="0" y="-69.8" width="8" height="69.8" rx="2" fill="#8787FF"></rect></g>
+  <g transform="translate(646.0,548)"><rect x="0" y="-66.1" width="8" height="66.1" rx="2" fill="#8987FF"></rect></g>
+  <g transform="translate(658.0,548)"><rect x="0" y="-58.7" width="8" height="58.7" rx="2" fill="#8B87FF"></rect></g>
+  <g transform="translate(670.0,548)"><rect x="0" y="-49.3" width="8" height="49.3" rx="2" fill="#8D86FF"></rect></g>
+  <g transform="translate(682.0,548)"><rect x="0" y="-40.3" width="8" height="40.3" rx="2" fill="#8F86FF"></rect></g>
+  <g transform="translate(694.0,548)"><rect x="0" y="-33.8" width="8" height="33.8" rx="2" fill="#9186FF"></rect></g>
+  <g transform="translate(706.0,548)"><rect x="0" y="-31.5" width="8" height="31.5" rx="2" fill="#9386FF"></rect></g>
+  <g transform="translate(718.0,548)"><rect x="0" y="-33.9" width="8" height="33.9" rx="2" fill="#9586FF"></rect></g>
+  <g transform="translate(730.0,548)"><rect x="0" y="-40.4" width="8" height="40.4" rx="2" fill="#9886FF"></rect></g>
+  <g transform="translate(742.0,548)"><rect x="0" y="-49.5" width="8" height="49.5" rx="2" fill="#9A85FF"></rect></g>
+  <g transform="translate(754.0,548)"><rect x="0" y="-58.8" width="8" height="58.8" rx="2" fill="#9C85FF"></rect></g>
+  <g transform="translate(766.0,548)"><rect x="0" y="-66.2" width="8" height="66.2" rx="2" fill="#9E85FF"></rect></g>
+  <g transform="translate(778.0,548)"><rect x="0" y="-69.8" width="8" height="69.8" rx="2" fill="#A085FF"></rect></g>
+  <g transform="translate(790.0,548)"><rect x="0" y="-68.7" width="8" height="68.7" rx="2" fill="#A285FF"></rect></g>
+  <g transform="translate(802.0,548)"><rect x="0" y="-63.3" width="8" height="63.3" rx="2" fill="#A484FF"></rect></g>
+  <g transform="translate(814.0,548)"><rect x="0" y="-54.7" width="8" height="54.7" rx="2" fill="#A684FF"></rect></g>
+  <g transform="translate(826.0,548)"><rect x="0" y="-45.2" width="8" height="45.2" rx="2" fill="#A884FF"></rect></g>
+<text x="640.0" y="600" fill="#6B7282" font-size="15" font-weight="400" text-anchor="middle" letter-spacing="0" >github.com/cyberslop/duet</text>
+</svg>
