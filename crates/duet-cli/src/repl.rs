@@ -7,7 +7,7 @@
 
 use crate::profile;
 use anyhow::Result;
-use duet_core::orchestrate::{execute, Config};
+use duet_core::orchestrate::{execute, execute_conductor, Config};
 use duet_core::render::Model;
 use duet_core::report::{ChannelReporter, Sys, UiMsg};
 use duet_core::style::Theme;
@@ -18,8 +18,8 @@ use std::sync::mpsc::Receiver;
 use std::sync::Arc;
 
 const COMMANDS: &[&str] = &[
-    "run", "review", "plan", "chat", "domain", "builder", "critic", "profile", "profiles", "rounds",
-    "swap", "noplan", "repo", "models", "doctor", "status", "help", "quit",
+    "run", "review", "plan", "chat", "domain", "builder", "critic", "strategist", "conductor",
+    "profile", "profiles", "rounds", "swap", "noplan", "repo", "models", "doctor", "status", "help", "quit",
 ];
 
 struct Session {
@@ -30,6 +30,9 @@ struct Session {
     rounds: usize,
     swap: bool,
     no_plan: bool,
+    /// Conductor mode: the strategist directs the implementer (= builder).
+    conductor: bool,
+    strategist: Model,
     test_cmd: Option<String>,
     local_endpoint: Option<String>,
     local_model: Option<String>,
@@ -59,6 +62,8 @@ pub fn run_session(th: &Theme) -> Result<i32> {
             rounds: 3,
             swap: false,
             no_plan: false,
+            conductor: false,
+            strategist: Model::Codex,
             test_cmd: None,
             local_endpoint: None,
             local_model: None,
@@ -71,6 +76,16 @@ pub fn run_session(th: &Theme) -> Result<i32> {
 
 impl ShellController for Conductor {
     fn header(&self) -> String {
+        if self.s.conductor {
+            return format!(
+                "🎼 {} → 🎤 {} · 🎧 {}  ·  {}  ·  {} iters",
+                self.s.strategist.label(),
+                self.s.builder.label(),
+                self.s.critic.label(),
+                self.s.domain,
+                self.s.rounds,
+            );
+        }
         format!(
             "🎤 {} + 🎧 {}  ·  🎼 {}  ·  {} rounds{}",
             self.s.builder.label(),
@@ -135,6 +150,11 @@ impl ShellController for Conductor {
                 "domain" | "d" => self.set_domain(arg),
                 "builder" => self.set_builder(arg),
                 "critic" => self.set_critic(arg),
+                "strategist" => self.set_strategist(arg),
+                "conductor" => {
+                    self.s.conductor = !self.s.conductor;
+                    say(&format!("🎼 conductor mode {} — {} (strategist) directs {} (implementer)", onoff(self.s.conductor), self.s.strategist.label(), self.s.builder.label()))
+                }
                 "profile" | "p" => self.apply_profile(arg),
                 "profiles" => ShellAction::Print(self.profile_lines()),
                 "rounds" => match arg.parse::<usize>() {
@@ -205,6 +225,7 @@ impl Conductor {
             "domain" | "d" => v(&["code", "research", "security"]),
             "builder" => v(&["claude", "codex"]),
             "critic" => v(&["claude", "codex", "local"]),
+            "strategist" => v(&["claude", "codex"]),
             "profile" | "p" => self.profiles.clone(),
             _ => vec![],
         }
@@ -214,7 +235,11 @@ impl Conductor {
         if self.busy.load(Ordering::SeqCst) {
             return say("a run is still finishing in the background — give it a moment");
         }
-        if self.s.builder == self.s.critic {
+        if self.s.conductor {
+            if self.s.strategist == self.s.builder {
+                return say("strategist and implementer are the same voice — set a different /strategist or /builder");
+            }
+        } else if self.s.builder == self.s.critic {
             return say("🎤 and 🎧 are the same voice — set a different /critic");
         }
         if task.trim().is_empty() && !review_only {
@@ -264,6 +289,8 @@ impl Conductor {
             local_endpoint: self.s.local_endpoint.clone(),
             local_model: self.s.local_model.clone(),
             domain: self.s.domain.clone(),
+            conductor: self.s.conductor,
+            strategist: self.s.conductor.then_some(self.s.strategist),
         }
     }
 
@@ -295,6 +322,16 @@ impl Conductor {
             None => say("critic must be: claude | codex | local"),
         }
     }
+    fn set_strategist(&mut self, arg: &str) -> ShellAction {
+        match Model::parse(arg) {
+            Some(Model::Local) => say("a local chat model can't strategize (no file tools) — use claude|codex"),
+            Some(m) => {
+                self.s.strategist = m;
+                say(&format!("🎼 strategist = {}", m.label()))
+            }
+            None => say("strategist must be: claude | codex"),
+        }
+    }
     fn apply_profile(&mut self, name: &str) -> ShellAction {
         if name.is_empty() {
             return say("usage: /profile <name>  (Tab to list)");
@@ -306,6 +343,10 @@ impl Conductor {
                 }
                 if let Some(m) = Model::parse(&p.critic) {
                     self.s.critic = m;
+                }
+                self.s.conductor = p.conductor;
+                if let Some(s) = p.strategist.as_deref().and_then(Model::parse) {
+                    self.s.strategist = s;
                 }
                 self.s.domain = p.domain;
                 self.s.rounds = p.rounds;
@@ -333,6 +374,16 @@ impl Conductor {
     }
 
     fn ensemble_line(&self) -> String {
+        if self.s.conductor {
+            return format!(
+                "   🎼 {} (strategist)  →  🎤 {} (implementer)   ·   🎧 {} (critic)   ·   🎼 {}   ·   {} iterations",
+                self.s.strategist.label(),
+                self.s.builder.label(),
+                self.s.critic.label(),
+                self.s.domain,
+                self.s.rounds,
+            );
+        }
         format!(
             "   🎤 {} (builder)  ⇄  🎧 {} (critic)   ·   🎼 {}   ·   {} rounds{}",
             self.s.builder.label(),
@@ -357,7 +408,13 @@ impl Conductor {
         for p in profile::load_all() {
             let swap = if p.swap { " · swap" } else { "" };
             let dom = if p.domain == "code" { String::new() } else { format!(" · {}", p.domain) };
-            out.push(format!("  {:<20} {} + {}  ({} rounds{swap}{dom})", p.name, p.builder, p.critic, p.rounds));
+            let roles = if p.conductor {
+                format!("{} → {} · {}", p.strategist.as_deref().unwrap_or("codex"), p.builder, p.critic)
+            } else {
+                format!("{} + {}", p.builder, p.critic)
+            };
+            let unit = if p.conductor { "iters" } else { "rounds" };
+            out.push(format!("  {:<22} {roles}  ({} {unit}{swap}{dom})", p.name, p.rounds));
             if let Some(d) = p.description {
                 out.push(format!("     {d}"));
             }
@@ -402,16 +459,25 @@ fn spawn_engine(cfg: Config, busy: Arc<AtomicBool>) -> Receiver<UiMsg> {
     busy.store(true, Ordering::SeqCst);
     std::thread::spawn(move || {
         let rep = ChannelReporter { tx: tx.clone() };
-        let builder = duet_agents::agent_for(cfg.builder);
         // 0 = converged · 2 = ran but didn't converge · 3 = errored before/while running
         let code = match duet_agents::build_critic(cfg.critic, cfg.local_endpoint.as_deref(), cfg.local_model.as_deref(), &rep) {
-            Ok(critic) => match execute(&cfg, builder, critic, &rep) {
-                Ok(c) => c,
-                Err(e) => {
-                    let _ = tx.send(UiMsg::Sys(Sys::Warn, format!("run failed: {e}")));
-                    3
+            Ok(critic) => {
+                let run = if cfg.conductor {
+                    let strategist = duet_agents::agent_for(cfg.strategist.expect("conductor mode requires a strategist"));
+                    let implementer = duet_agents::agent_for(cfg.builder);
+                    execute_conductor(&cfg, strategist, implementer, critic, &rep)
+                } else {
+                    let builder = duet_agents::agent_for(cfg.builder);
+                    execute(&cfg, builder, critic, &rep)
+                };
+                match run {
+                    Ok(c) => c,
+                    Err(e) => {
+                        let _ = tx.send(UiMsg::Sys(Sys::Warn, format!("run failed: {e}")));
+                        3
+                    }
                 }
-            },
+            }
             Err(e) => {
                 let _ = tx.send(UiMsg::Sys(Sys::Warn, format!("{e}")));
                 3
@@ -444,6 +510,7 @@ fn help_lines() -> Vec<String> {
         "  /review [text]    critique & fix the current changes      /plan <text>".into(),
         "  /domain code|research|security    /builder claude|codex    /critic claude|codex|local".into(),
         "  /profile <name>   apply an ensemble        /profiles   list them".into(),
+        "  /conductor        toggle strategist→implementer mode   /strategist claude|codex".into(),
         "  /rounds <N>   /swap   /noplan   /repo <path>".into(),
         "  /models   /doctor   /status   /help   /quit".into(),
         "  PgUp/PgDn scroll · ↑/↓ history · Ctrl-C leave".into(),
