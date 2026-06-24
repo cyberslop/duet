@@ -9,7 +9,7 @@ clap = { version = "4", features = ["derive"] }
 anyhow = "1"
 ratatui = "0.29"
 ureq = { version = "2", features = ["json"] }
-toml = "0.8"
+toml = "1.1"
 
 [profile.release]
 strip = true
