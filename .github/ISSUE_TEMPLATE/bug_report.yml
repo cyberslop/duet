@@ -1,0 +1,50 @@
+name: Bug report
+description: Something in duet behaves incorrectly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. Please run `duet doctor` first —
+        it surfaces most environment problems (missing/unauthenticated `claude` or
+        `codex` CLIs, etc.).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, including what you expected instead.
+      placeholder: When I run `duet review`, ...
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Exact commands and, if relevant, the kind of repo/change you ran against.
+      placeholder: |
+        1. `duet run ...`
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: "`duet doctor` output"
+      description: Paste the output of `duet doctor`. It is rendered as a code block, so no need for backticks.
+      render: text
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: duet version / commit
+      description: Output of `duet --version`, or the git commit you built from.
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS & platform
+      placeholder: macOS 15.5 (Apple Silicon) / Ubuntu 24.04 / ...
+    validations:
+      required: true

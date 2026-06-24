@@ -22,7 +22,9 @@ logged in. `duet doctor` verifies your environment. A local OpenAI-compatible se
 
 - **`cargo test` is green** and **`cargo clippy --all-targets` is clean** (zero
   warnings, which is the bar).
-- **`cargo fmt`** before committing.
+- **Format your changed files** before committing (e.g. `cargo fmt -p <crate>`). The
+  workspace isn't fully rustfmt-clean yet, so avoid a repo-wide `cargo fmt` — it would
+  reformat unrelated files and bury your change.
 - New behavior comes with a test. The event layer is tested against real captured CLI
   streams in `crates/duet-core/tests/fixtures/`; TUI changes are tested by rendering to
   a `TestBackend` (see `crates/duet-tui/src/shell.rs`), so layout is verifiable without
