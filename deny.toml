@@ -51,9 +51,11 @@ allow = ["WTFPL"]
 
 [bans]
 # Duplicate versions are common and not a security issue on their own — surface
-# them, don't fail. Wildcard ("*") version requirements are forbidden.
+# them, don't fail. Wildcard ("*") version requirements are forbidden, except for
+# the workspace's own internal path dependencies (which carry no version).
 multiple-versions = "warn"
 wildcards = "deny"
+allow-wildcard-paths = true
 
 [sources]
 # Only crates.io and the workspace's own path deps are allowed; no arbitrary git
