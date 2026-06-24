@@ -4,7 +4,7 @@ use anyhow::{anyhow, Result};
 use clap::{Args, Parser, Subcommand};
 use duet_agents::{resolve_claude, resolve_codex};
 use duet_core::events::{parse_claude_line, parse_codex_line, AgentEvent};
-use duet_core::orchestrate::{execute, Config};
+use duet_core::orchestrate::{execute, execute_conductor, Config};
 use duet_core::render::{model_of_filename, render_line, render_stream, Model};
 use duet_core::report::{ChannelReporter, ConsoleReporter, Sys, UiMsg};
 use duet_core::style::Theme;
@@ -104,6 +104,13 @@ struct RunArgs {
     /// After convergence, swap roles for one fresh-eyes review by the other model
     #[arg(long)]
     swap: bool,
+    /// Conductor mode: a long-horizon strategist directs a tactical implementer
+    /// (--builder is the implementer; pick the director with --strategist)
+    #[arg(long)]
+    conductor: bool,
+    /// In conductor mode, the strategist (director) model: claude | codex
+    #[arg(long)]
+    strategist: Option<String>,
     #[arg(short = 'y', long)]
     yes: bool,
     /// Drive the run through the live ratatui TUI instead of the streaming view
@@ -177,9 +184,15 @@ fn list_profiles(th: &Theme) {
         let swap = if p.swap { " · swap" } else { "" };
         let plan = if p.no_plan { " · no-plan" } else { "" };
         let dom = if p.domain == "code" { String::new() } else { format!(" · {}", p.domain) };
+        let roles = if p.conductor {
+            format!("{} → {} · {}", p.strategist.as_deref().unwrap_or("codex"), p.builder, p.critic)
+        } else {
+            format!("{} ⇄ {}", p.builder, p.critic)
+        };
+        let unit = if p.conductor { "iters" } else { "rounds" };
         println!(
-            "{}{:<20}{} {} ⇄ {}  ({} rounds{swap}{plan}{dom})",
-            th.bold, p.name, th.rst, p.builder, p.critic, p.rounds
+            "{}{:<22}{} {roles}  ({} {unit}{swap}{plan}{dom})",
+            th.bold, p.name, th.rst, p.rounds
         );
         if let Some(d) = &p.description {
             println!("{}  {}{}", th.dim, d, th.rst);
@@ -321,9 +334,15 @@ fn dispatch(a: RunArgs, review_only: bool, plan_only: bool, th: &Theme) -> Resul
 /// Shared by `dispatch` and the interactive session.
 fn run_engine(cfg: Config, th: &Theme) -> Result<i32> {
     let rep = ConsoleReporter { theme: *th };
-    let builder = duet_agents::agent_for(cfg.builder);
     let critic = duet_agents::build_critic(cfg.critic, cfg.local_endpoint.as_deref(), cfg.local_model.as_deref(), &rep)?;
-    execute(&cfg, builder, critic, &rep)
+    if cfg.conductor {
+        let strategist = duet_agents::agent_for(cfg.strategist.expect("conductor mode requires a strategist"));
+        let implementer = duet_agents::agent_for(cfg.builder);
+        execute_conductor(&cfg, strategist, implementer, critic, &rep)
+    } else {
+        let builder = duet_agents::agent_for(cfg.builder);
+        execute(&cfg, builder, critic, &rep)
+    }
 }
 
 /// Run the engine on a background thread, feeding the live TUI (or the headless
@@ -338,15 +357,24 @@ fn run_with_tui(cfg: Config, record: bool) -> Result<i32> {
     let (tx, rx) = channel();
     let handle = std::thread::spawn(move || {
         let rep = ChannelReporter { tx: tx.clone() };
-        let builder = duet_agents::agent_for(cfg.builder);
         let code = match duet_agents::build_critic(cfg.critic, cfg.local_endpoint.as_deref(), cfg.local_model.as_deref(), &rep) {
-            Ok(critic) => match execute(&cfg, builder, critic, &rep) {
-                Ok(c) => c,
-                Err(e) => {
-                    let _ = tx.send(UiMsg::Sys(Sys::Warn, format!("error: {e}")));
-                    2
+            Ok(critic) => {
+                let run = if cfg.conductor {
+                    let strategist = duet_agents::agent_for(cfg.strategist.expect("conductor mode requires a strategist"));
+                    let implementer = duet_agents::agent_for(cfg.builder);
+                    execute_conductor(&cfg, strategist, implementer, critic, &rep)
+                } else {
+                    let builder = duet_agents::agent_for(cfg.builder);
+                    execute(&cfg, builder, critic, &rep)
+                };
+                match run {
+                    Ok(c) => c,
+                    Err(e) => {
+                        let _ = tx.send(UiMsg::Sys(Sys::Warn, format!("error: {e}")));
+                        2
+                    }
                 }
-            },
+            }
             Err(e) => {
                 let _ = tx.send(UiMsg::Sys(Sys::Warn, format!("error: {e}")));
                 2
@@ -391,6 +419,24 @@ fn to_config(a: RunArgs, review_only: bool, plan_only: bool) -> Result<Config> {
     if builder == Model::Local {
         return Err(anyhow!("a local chat model can't be the builder (no file/exec tools) — use claude|codex"));
     }
+
+    // Conductor mode: a long-horizon strategist directs the implementer (= builder).
+    let conductor = p.map(|p| p.conductor).unwrap_or(false) || a.conductor;
+    let strategist = if conductor {
+        // Profile's strategist wins; else the --strategist flag; else codex as a
+        // functional default (the cross-vendor pairing is the point, not the order).
+        let s = p.and_then(|p| p.strategist.clone()).or(a.strategist).unwrap_or_else(|| "codex".into());
+        let m = Model::parse(&s).ok_or_else(|| anyhow!("strategist must be claude|codex"))?;
+        if m == Model::Local {
+            return Err(anyhow!("the strategist needs file/exec tools — use claude|codex"));
+        }
+        if m == builder {
+            return Err(anyhow!("strategist and implementer (--builder) must be different models"));
+        }
+        Some(m)
+    } else {
+        None
+    };
     let repo = a.repo.unwrap_or(std::env::current_dir()?);
     let repo = repo.canonicalize().unwrap_or(repo);
     let test_cmd = if a.no_test {
@@ -428,6 +474,8 @@ fn to_config(a: RunArgs, review_only: bool, plan_only: bool) -> Result<Config> {
         local_endpoint,
         local_model,
         domain,
+        conductor,
+        strategist,
     })
 }
 
@@ -534,6 +582,7 @@ fn watch_label(filename: &str) -> String {
         "plan" => "Plan",
         "redteam" => "Plan red-team",
         "planrev" => "Plan revise",
+        "strategy" => "Strategize",
         "build" => "Build",
         "review" => "Review",
         other => other,

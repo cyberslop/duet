@@ -50,6 +50,31 @@ critic = "codex"
 domain = "security"
 rounds = 3
 
+# ── conductor mode: a long-horizon STRATEGIST directs a tactical IMPLEMENTER ──
+# The strategist holds the goal and re-points the implementer at one narrow step
+# at a time until the goal is genuinely met; the critic gates the whole result.
+# `builder` is the implementer. The two cross-vendor directions are both shipped;
+# neither vendor is privileged as "the" strategist — pick by which you trust to
+# hold the long horizon in your setup.
+
+[[profile]]
+name = "conductor-codex-lead"
+description = "Codex strategizes the long horizon; Claude implements tactically; Codex critiques"
+conductor = true
+strategist = "codex"
+builder = "claude"
+critic = "codex"
+rounds = 6
+
+[[profile]]
+name = "conductor-claude-lead"
+description = "Claude strategizes the long horizon; Codex implements tactically; Codex critiques"
+conductor = true
+strategist = "claude"
+builder = "codex"
+critic = "codex"
+rounds = 6
+
 # Cost-tiered pattern (the routing the noisy-local-critic run motivated): use
 # code-local-critic for bulk review rounds, then a final code-frontier pass for
 # the deciding sign-off. Domains research/security are placeholders until those

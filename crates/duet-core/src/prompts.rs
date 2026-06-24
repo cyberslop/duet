@@ -11,6 +11,9 @@ const PLAN_REVISE: &str = include_str!("../prompts/plan_revise.txt");
 const IMPLEMENT: &str = include_str!("../prompts/implement.txt");
 const REVIEW: &str = include_str!("../prompts/review.txt");
 const ADDRESS: &str = include_str!("../prompts/address.txt");
+const CONDUCTOR_STRATEGY: &str = include_str!("../prompts/conductor_strategy.txt");
+const CONDUCTOR_PROGRESS: &str = include_str!("../prompts/conductor_progress.txt");
+const CONDUCTOR_HANDOFF: &str = include_str!("../prompts/conductor_handoff.txt");
 
 fn load(name: &str, default: &str) -> String {
     if let Some(dir) = std::env::var_os("DUET_PROMPTS") {
@@ -53,5 +56,23 @@ pub fn address(builder: &str, critic: &str, test: &str, round: usize) -> String 
     fill(
         &load("address", ADDRESS),
         &[("BUILDER", builder), ("CRITIC", critic), ("TEST", test), ("ROUND", &round.to_string())],
+    )
+}
+
+// ── conductor mode (strategist directs implementer over a long horizon) ──
+
+pub fn conductor_strategy(task: &str, strategist: &str, implementer: &str) -> String {
+    fill(
+        &load("conductor_strategy", CONDUCTOR_STRATEGY),
+        &[("TASK", task), ("STRATEGIST", strategist), ("IMPLEMENTER", implementer)],
+    )
+}
+pub fn conductor_progress(task: &str, round: usize) -> String {
+    fill(&load("conductor_progress", CONDUCTOR_PROGRESS), &[("TASK", task), ("ROUND", &round.to_string())])
+}
+pub fn conductor_handoff(objective: &str, test: &str, round: usize) -> String {
+    fill(
+        &load("conductor_handoff", CONDUCTOR_HANDOFF),
+        &[("OBJECTIVE", objective), ("TEST", test), ("ROUND", &round.to_string())],
     )
 }

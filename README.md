@@ -35,6 +35,28 @@ finishing on a review. convergence is decided by an **objective gate** — a tes
 citation check, or a harness smoke test — not by a model grading itself. when the gate is
 green and the critic has no blocking objections, the ensemble is **🎵 in harmony**.
 
+## conductor mode
+
+the default loop is **adversarial** — builder versus critic. conductor mode is a second,
+**collaborative** ensemble for tasks too long-horizon for a single build pass. it splits the
+work across two models with complementary strengths: a **strategist** that is thorough and
+holds the long-horizon goal without losing the thread, and an **implementer** that is
+resourceful tactically but tends to stop early. the strategist studies the repo (read-only),
+writes the plan, and hands the implementer **one narrow, pointed objective** at a time —
+naming the specific files and what "done" means for that step — because a pointed task is one
+the implementer finishes, while the whole codebase at once is one it only scratches. after
+each implementer pass the strategist re-reads the cumulative diff, judges real progress
+against the goal, and either re-points or declares the goal met. the adversarial critic then
+gates the whole result, and the domain's objective gate has the final word.
+
+```
+strategize → (implement ⇄ re-direct)* → critic gate → verify
+```
+
+the strategist never edits; the implementer never plans the whole task. roles are configured
+per profile and neither vendor is the privileged director — run `duet run --conductor` with
+`--strategist`/`--builder`, or apply `conductor-codex-lead` / `conductor-claude-lead`.
+
 ## built with duet
 
 duet's own Rust source was written this way. each change was drafted by one model and
@@ -58,6 +80,12 @@ its own hue, carried down the left of every line.
 - **cross-model adversarial loop.** the builder and critic alternate over bounded rounds
   and always finish on a review. convergence is decided by an objective gate, not by a
   model grading itself.
+- **conductor mode (strategist ⟶ implementer).** a second ensemble shape for long-horizon
+  work: a *strategist* model holds the goal and re-points a tactical *implementer* model at
+  one narrow, well-scoped objective at a time — never the whole codebase at once — until the
+  goal is genuinely met, with the critic gating the result. the strategist reads and directs;
+  the implementer writes. roles are assignable per profile (`conductor-codex-lead`,
+  `conductor-claude-lead`); neither vendor is privileged as the strategist.
 - **interactive shell.** the full-screen app described above — chat, a `/` command
   palette, and `/run <task>` for the whole plan → build → review ⇄ fix → verify loop.
 - **three domains.** `code` runs the build-and-review loop. `research` gathers sources and
@@ -115,6 +143,10 @@ duet review
 duet run --tui "<task>"
 duet run --domain research "How does the Eiffel Tower's height change with temperature?"
 duet run --domain security "Build a harness to triage AVML memory captures"
+
+# conductor mode: a long-horizon strategist directs a tactical implementer
+duet run --conductor --strategist codex --builder claude "<a large, multi-step task>"
+duet run --profile conductor-claude-lead "<a large, multi-step task>"
 ```
 
 ### shell commands
@@ -126,6 +158,7 @@ duet run --domain security "Build a harness to triage AVML memory captures"
 | `/review [text]`, `/plan <text>` | review only, or plan only |
 | `/domain code\|research\|security` | switch domain |
 | `/builder claude\|codex`, `/critic claude\|codex\|local` | reassign a role |
+| `/conductor`, `/strategist claude\|codex` | toggle conductor mode / set the director |
 | `/profile <name>`, `/profiles` | apply or list ensembles |
 | `/rounds <N>`, `/swap`, `/noplan` | tune the loop |
 | `/models`, `/doctor`, `/status` | local-model advice, environment check, current setup |

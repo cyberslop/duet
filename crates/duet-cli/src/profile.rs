@@ -32,6 +32,11 @@ pub struct Profile {
     pub local_endpoint: Option<String>,
     #[serde(default)]
     pub local_model: Option<String>,
+    /// Conductor mode: `builder` is the implementer and `strategist` directs it.
+    #[serde(default)]
+    pub conductor: bool,
+    #[serde(default)]
+    pub strategist: Option<String>,
 }
 
 fn d_claude() -> String {
@@ -90,4 +95,33 @@ pub fn find(name: &str) -> Result<Profile> {
         let names = all.iter().map(|p| p.name.as_str()).collect::<Vec<_>>().join(", ");
         anyhow!("unknown profile '{name}'. Available: {names}")
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse;
+    const DEFAULTS: &str = include_str!("profiles.toml");
+
+    #[test]
+    fn builtin_profiles_parse() {
+        let ps = parse(DEFAULTS);
+        assert!(ps.iter().any(|p| p.name == "code-frontier"));
+        // Non-conductor profiles default to conductor=false with no strategist.
+        let cf = ps.iter().find(|p| p.name == "code-frontier").unwrap();
+        assert!(!cf.conductor);
+        assert!(cf.strategist.is_none());
+    }
+
+    #[test]
+    fn conductor_profiles_are_well_formed() {
+        let ps = parse(DEFAULTS);
+        let conductors: Vec<_> = ps.iter().filter(|p| p.conductor).collect();
+        assert!(conductors.len() >= 2, "expected both cross-vendor conductor profiles");
+        for p in conductors {
+            let strat = p.strategist.as_deref().expect("a conductor profile names a strategist");
+            // The whole point is a cross-model pairing: strategist != implementer.
+            assert_ne!(strat, p.builder, "profile {}: strategist and implementer must differ", p.name);
+            assert!(matches!(strat, "claude" | "codex"), "profile {}: strategist must have file tools", p.name);
+        }
+    }
 }

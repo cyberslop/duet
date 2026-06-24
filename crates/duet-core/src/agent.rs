@@ -81,6 +81,9 @@ pub enum Role {
     ReviewJson,
     /// Critique producing freeform markdown (plan red-team).
     ReviewText,
+    /// Long-horizon direction (conductor mode): reads the repo and emits a plan +
+    /// the next scoped objective as a structured JSON message. Reads, never edits.
+    Strategize,
     /// Plain conversation: no tools, no skills — just a reply.
     Chat,
 }

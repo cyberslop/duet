@@ -72,6 +72,18 @@ impl Agent for ClaudeAgent {
                     "Edit Write",
                 ]);
             }
+            Role::Strategize => {
+                // The strategist studies the repo to direct the implementer; it
+                // reads widely but must never edit — its output is the plan/handoff.
+                c.args([
+                    "--permission-mode",
+                    "plan",
+                    "--allowedTools",
+                    "Read Grep Glob Bash(git diff:*) Bash(git log:*) Bash(git show:*) Bash(cat:*) Bash(sed:*)",
+                    "--disallowedTools",
+                    "Edit Write",
+                ]);
+            }
             Role::Chat => {
                 // Pure conversation: deny every tool (incl. Skill/Task) so a casual
                 // message never spins up an agentic, skill-running session.
@@ -120,7 +132,8 @@ impl Agent for CodexAgent {
             Role::ReviewJson => {
                 c.arg("-s").arg("read-only").arg("--output-schema").arg(ctx.schema);
             }
-            Role::ReviewText | Role::Chat => {
+            Role::ReviewText | Role::Strategize | Role::Chat => {
+                // Strategize captures the final message via `-o out` (appended below).
                 c.arg("-s").arg("read-only");
             }
         }
