@@ -26,15 +26,24 @@ pub struct LocalBackend {
 
 impl LocalBackend {
     pub fn new(endpoint: &str, model: &str, api_key: Option<String>, timeout_secs: u64) -> Self {
-        let agent = ureq::AgentBuilder::new().timeout(Duration::from_secs(timeout_secs)).build();
+        let agent = Self::agent(timeout_secs);
         LocalBackend { endpoint: endpoint.trim_end_matches('/').to_string(), model: model.to_string(), api_key, agent }
+    }
+
+    /// A blocking agent with an overall per-request deadline.
+    fn agent(timeout_secs: u64) -> ureq::Agent {
+        let config = ureq::Agent::config_builder()
+            .timeout_global(Some(Duration::from_secs(timeout_secs)))
+            .build();
+        ureq::Agent::new_with_config(config)
     }
 
     /// GET /models — the served model ids (local analog of `codex login status`).
     pub fn list_models(endpoint: &str, timeout_secs: u64) -> Result<Vec<String>> {
-        let agent = ureq::AgentBuilder::new().timeout(Duration::from_secs(timeout_secs)).build();
+        let agent = Self::agent(timeout_secs);
         let url = format!("{}/models", endpoint.trim_end_matches('/'));
-        let v: serde_json::Value = agent.get(&url).call().map_err(|e| anyhow!("{e}"))?.into_json()?;
+        let reader = agent.get(&url).call().map_err(|e| anyhow!("{e}"))?.into_body().into_reader();
+        let v: serde_json::Value = serde_json::from_reader(reader)?;
         Ok(v.get("data")
             .and_then(|d| d.as_array())
             .map(|a| a.iter().filter_map(|m| m.get("id").and_then(|i| i.as_str()).map(String::from)).collect())
@@ -83,7 +92,7 @@ impl LocalBackend {
         let mut rawf = std::fs::File::create(raw).ok();
         let mut content = String::new();
         let mut line_buf = String::new();
-        for line in BufReader::new(resp.into_reader()).lines() {
+        for line in BufReader::new(resp.into_body().into_reader()).lines() {
             let line = line?;
             if let Some(f) = rawf.as_mut() {
                 let _ = writeln!(f, "{line}");
@@ -114,11 +123,12 @@ impl LocalBackend {
         Ok(content)
     }
 
-    fn post(&self, url: &str, body: &serde_json::Value) -> Result<ureq::Response> {
-        let mut req = self.agent.post(url).set("Content-Type", "application/json");
+    fn post(&self, url: &str, body: &serde_json::Value) -> Result<ureq::http::Response<ureq::Body>> {
+        // `send_json` sets `Content-Type: application/json` for us.
+        let mut req = self.agent.post(url);
         if let Some(k) = &self.api_key {
-            req = req.set("Authorization", &format!("Bearer {k}"));
+            req = req.header("Authorization", format!("Bearer {k}"));
         }
-        req.send_json(body.clone()).map_err(|e| anyhow!("POST {url}: {e}"))
+        req.send_json(body).map_err(|e| anyhow!("POST {url}: {e}"))
     }
 }
