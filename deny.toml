@@ -1,0 +1,65 @@
+# cargo-deny configuration — supply-chain + license policy for the workspace.
+# Run locally with `cargo deny check`. CI runs it on every PR and weekly.
+
+[graph]
+# Restrict to the platforms we actually build for. This both speeds up the scan
+# and keeps the dependency set deterministic (it drops wasm/uefi-only crates that
+# never ship in a duet binary).
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-apple-darwin",
+    "aarch64-apple-darwin",
+    "x86_64-pc-windows-msvc",
+]
+all-features = true
+
+[advisories]
+version = 2
+# RustSec advisory DB. Known vulnerabilities fail the build; yanked crates too.
+yanked = "deny"
+# Flag unmaintained crates only when they're our direct deps (keeps noise down
+# while still surfacing rot we can act on).
+unmaintained = "workspace"
+ignore = []
+
+[licenses]
+version = 2
+# Permissive licenses compatible with shipping an MIT-licensed tool. Every entry
+# is backed by a crate currently in the tree (e.g. CDLA-Permissive-2.0 →
+# webpki-roots, Unicode-3.0 → the icu/unicode-ident stack, ISC → ring/untrusted).
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "ISC",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "Zlib",
+    "0BSD",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "CDLA-Permissive-2.0",
+]
+confidence-threshold = 0.9
+
+# `terminfo` (pulled by the termwiz terminal stack) is WTFPL — a maximally
+# permissive license we allow only for that one crate rather than globally.
+[[licenses.exceptions]]
+crate = "terminfo"
+allow = ["WTFPL"]
+
+[bans]
+# Duplicate versions are common and not a security issue on their own — surface
+# them, don't fail. Wildcard ("*") version requirements are forbidden, except for
+# the workspace's own internal path dependencies (which carry no version).
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true
+
+[sources]
+# Only crates.io and the workspace's own path deps are allowed; no arbitrary git
+# or alternative registries.
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

@@ -2,6 +2,8 @@
 name = "duet-core"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+publish = false
 description = "duet engine, event model, agents, advisor — provider/domain kernel"
 
 [lib]
