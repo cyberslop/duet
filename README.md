@@ -3,6 +3,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/cyberslop/duet/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/cyberslop/duet/ci.yml?branch=main&style=flat-square&label=ci"></a>
   <a href="LICENSE"><img alt="license: MIT" src="https://img.shields.io/badge/license-MIT-8787FF?style=flat-square"></a>
   <img alt="rust: stable 2021" src="https://img.shields.io/badge/rust-stable_2021-A884FF?style=flat-square">
   <img alt="built with duet" src="https://img.shields.io/badge/built_with-duet-3AA0FF?style=flat-square">
