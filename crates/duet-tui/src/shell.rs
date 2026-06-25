@@ -6,7 +6,6 @@
 use crate::{row_line, theme, Row};
 use anyhow::Result;
 use duet_core::report::UiMsg;
-use duet_core::style::Theme;
 use ratatui::backend::CrosstermBackend;
 use ratatui::crossterm::{
     event::{self, Event, KeyCode, KeyEventKind, KeyModifiers},
@@ -134,13 +133,13 @@ impl Shell {
     }
 }
 
-pub fn run_shell(ctrl: &mut dyn ShellController, th: &Theme) -> Result<i32> {
+pub fn run_shell(ctrl: &mut dyn ShellController) -> Result<i32> {
     enable_raw_mode()?;
     let mut out = std::io::stdout();
     execute!(out, EnterAlternateScreen)?;
     let mut term = Terminal::new(CrosstermBackend::new(out))?;
     let mut sh = Shell::new(ctrl.intro());
-    let result = event_loop(&mut term, &mut sh, ctrl, th);
+    let result = event_loop(&mut term, &mut sh, ctrl);
     disable_raw_mode()?;
     execute!(term.backend_mut(), LeaveAlternateScreen)?;
     result
@@ -150,7 +149,6 @@ fn event_loop(
     term: &mut Terminal<CrosstermBackend<std::io::Stdout>>,
     sh: &mut Shell,
     ctrl: &mut dyn ShellController,
-    th: &Theme,
 ) -> Result<i32> {
     let start = std::time::Instant::now();
     let mut spin = 0usize;
@@ -297,7 +295,6 @@ fn event_loop(
             }
             _ => {}
         }
-        let _ = th;
     }
 }
 
@@ -419,7 +416,7 @@ fn cells_to_line(cells: &[(char, Style)]) -> Line<'static> {
 
 /// Word-wrap a styled line to `width` columns (display-width aware), preserving
 /// span styles. Continuation lines start at column 0; long words hard-break.
-fn wrap_line(line: &Line, width: u16) -> Vec<Line<'static>> {
+pub(crate) fn wrap_line(line: &Line, width: u16) -> Vec<Line<'static>> {
     let width = (width as usize).max(1);
     let cells: Vec<(char, Style)> =
         line.spans.iter().flat_map(|s| s.content.chars().map(move |c| (c, s.style))).collect();

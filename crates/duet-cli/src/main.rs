@@ -137,7 +137,7 @@ fn main() {
 fn run(cli: Cli, th: &Theme) -> Result<i32> {
     let cmd = match cli.cmd {
         Some(c) => c,
-        None => return repl::run_session(th), // bare `duet` → interactive session
+        None => return repl::run_session(), // bare `duet` → interactive session
     };
     match cmd {
         Cmd::Run(a) => dispatch(a, false, false, th),

@@ -10,7 +10,6 @@ use anyhow::Result;
 use duet_core::orchestrate::{execute, execute_conductor, Config};
 use duet_core::render::Model;
 use duet_core::report::{ChannelReporter, Sys, UiMsg};
-use duet_core::style::Theme;
 use duet_tui::{run_shell, ShellAction, ShellController};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -46,7 +45,7 @@ struct Conductor {
     busy: Arc<AtomicBool>,
 }
 
-pub fn run_session(th: &Theme) -> Result<i32> {
+pub fn run_session() -> Result<i32> {
     use std::io::IsTerminal;
     if !std::io::stdout().is_terminal() || !std::io::stdin().is_terminal() {
         println!("duet's interactive shell needs a terminal.");
@@ -71,7 +70,7 @@ pub fn run_session(th: &Theme) -> Result<i32> {
         profiles: profile::load_all().iter().map(|p| p.name.clone()).collect(),
         busy: Arc::new(AtomicBool::new(false)),
     };
-    run_shell(&mut c, th)
+    run_shell(&mut c)
 }
 
 impl ShellController for Conductor {
