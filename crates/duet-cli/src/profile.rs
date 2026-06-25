@@ -78,11 +78,16 @@ pub fn load_all() -> Vec<Profile> {
     let mut profiles = parse(DEFAULTS);
     if let Some(p) = user_path() {
         if let Ok(s) = std::fs::read_to_string(&p) {
-            for up in parse(&s) {
-                match profiles.iter_mut().find(|x| x.name == up.name) {
-                    Some(existing) => *existing = up,
-                    None => profiles.push(up),
+            match toml::from_str::<ProfileFile>(&s) {
+                Ok(f) => {
+                    for up in f.profile {
+                        match profiles.iter_mut().find(|x| x.name == up.name) {
+                            Some(existing) => *existing = up,
+                            None => profiles.push(up),
+                        }
+                    }
                 }
+                Err(e) => eprintln!("warning: ignoring {} ({e})", p.display()),
             }
         }
     }

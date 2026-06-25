@@ -393,7 +393,11 @@ fn draw(f: &mut Frame, app: &mut App) {
     f.render_widget(Paragraph::new(header), chunks[0]);
 
     // conversation
-    let lines: Vec<Line> = app.rows.iter().map(|r| row_line(r, chunks[1].width)).collect();
+    let lines: Vec<Line> = app
+        .rows
+        .iter()
+        .flat_map(|r| shell::wrap_line(&row_line(r, chunks[1].width), chunks[1].width))
+        .collect();
     let total = lines.len();
     let vis = chunks[1].height as usize;
     let max_scroll = total.saturating_sub(vis);
@@ -634,5 +638,29 @@ mod tests {
         app.findings.clear();
         let frame = snapshot(&mut app, 80, 20);
         assert!(!frame.contains("findings ("), "no findings panel when there are none");
+    }
+
+    #[test]
+    fn long_reply_wraps_not_clipped() {
+        let mut app = App {
+            title: "demo".into(),
+            status: "running".into(),
+            rows: vec![Row::Event(
+                Model::Claude,
+                AgentEvent::Message(
+                    "Yes. Obviously. (Also: this is a coding planning environment, not really \
+                     something to plan and build, so this question is just for fun and the answer \
+                     is a resounding yes.)"
+                        .into(),
+                ),
+            )],
+            findings: vec![],
+            scroll: 0,
+            follow: true,
+        };
+        let frame = snapshot(&mut app, 40, 16);
+        // the tail must appear; without wrapping the viewer clips it at the pane width
+        assert!(frame.contains("resounding yes"), "end of long reply is visible (wrapped, not clipped)");
+        assert!(frame.lines().all(|l| l.chars().count() <= 40), "no row overflows the pane width");
     }
 }
