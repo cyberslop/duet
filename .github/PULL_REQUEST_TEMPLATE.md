@@ -13,8 +13,8 @@ See CONTRIBUTING.md for conventions and the project layout.
 
 ## Checklist
 
-- [ ] `cargo test --workspace` is green
-- [ ] `cargo clippy --all-targets --all-features -- -D warnings` is clean (zero warnings is the bar)
+- [ ] `cargo test --workspace --locked` is green
+- [ ] `cargo clippy --workspace --all-targets --all-features --locked -- -D warnings` is clean (zero warnings is the bar)
 - [ ] Changed files are formatted (`cargo fmt -p <crate>`); the change stays focused
 - [ ] New behavior comes with a test
 - [ ] Commit subjects are clear and imperative

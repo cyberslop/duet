@@ -1,6 +1,6 @@
 # duet — brand & design reference
 
-> _a symphony of models — many voices, one score._
+> _a symphony of models · many voices, one score._
 
 duet is **dark, monospace, terminal-first**, organized around a musical **duet**
 metaphor: two model voices (🎤 builder + 🎧 critic) iterating "until they're in harmony."

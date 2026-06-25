@@ -1,11 +1,11 @@
-# duet redesign — UI, README, and graphics
+# duet redesign: UI, README, and graphics
 
 a brand-fidelity pass that brings the app, the README, and the repository's graphics into
 alignment with the **duet Design System** (the claude.ai/design project, mirrored as the
 `duet-design` Agent Skill). duet was already on-brand in structure and copy; this was a
 *fidelity + expression* pass, not a teardown. the design system's `ConversationLine`,
-`PhaseDivider`, `Badge`, `ModelChip`, `FindingRow`, and `Equalizer` primitives — and the
-full-screen `ui_kits/shell` and `ui_kits/viewer` recreations — were the authoritative
+`PhaseDivider`, `Badge`, `ModelChip`, `FindingRow`, and `Equalizer` primitives (and the
+full-screen `ui_kits/shell` and `ui_kits/viewer` recreations) were the authoritative
 target, imported directly from the project.
 
 ## 1. brand graphics → committed to the repo
@@ -15,7 +15,7 @@ target, imported directly from the project.
 | file | what it is |
 |---|---|
 | `duet-mark.svg` · `duet-icon.svg` · `duet-logo.svg` | the interlocking-voices mark, app icon, horizontal lockup |
-| `duet-hero.svg` | README masthead — mark + wordmark + tagline + an animated equalizer |
+| `duet-hero.svg` | README masthead: mark + wordmark + tagline + an animated equalizer |
 | `duet-shell.svg` | a "screenshot" of the live shell: header, color-guttered conversation, a finding, the equalizer, the input box |
 | `duet-loop.svg` | the `plan + red-team → Build ⇄ Review → verify → in harmony` flow |
 | `duet-social.svg` | a 1280×640 social / OG card |
@@ -28,7 +28,7 @@ tokens, so the graphics and the TUI share one palette. equalizer bars animate vi
 
 the README opens on the hero, carries brand badges, shows the shell mock under "the
 interactive shell" and the loop diagram under "how it works", and applies the lowercase
-musical voice to headings — while preserving every piece of verified technical content
+musical voice to headings, while preserving every piece of verified technical content
 (capabilities, the command table, architecture, configuration). a new **design** section
 points at `docs/brand.md` and the assets. the configuration table documents the new
 `COLORTERM` behavior.
@@ -38,14 +38,14 @@ points at `docs/brand.md` and the assets. the configuration table documents the 
 the TUI rendered close to the brand already; this pass makes the tokens authoritative and
 turns semantics into color, faithfully to the imported primitives.
 
-- **`duet-core/src/style.rs`** — the streaming-console `Theme` gained a **truecolor**
+- `duet-core/src/style.rs`: the streaming-console `Theme` gained a **truecolor**
   variant (exact brand hex) selected when `COLORTERM=truecolor|24bit`, with the existing
   ANSI-256 theme as the fallback and `plain` for non-TTY / `NO_COLOR`.
-- **`duet-tui/src/theme.rs`** (new) — the design palette as ratatui colors: voices, brand
+- `duet-tui/src/theme.rs` (new): the design palette as ratatui colors: voices, brand
   accents, semantics, text, borders, severity, and file-type accents, each exact hex on
   truecolor terminals and the sampled ANSI-256 index otherwise. it replaces every scattered
   `Color::Indexed(...)` literal in the shell and viewer.
-- **semantics → color** (`ConversationLine` / `PhaseDivider` / `FindingRow` parity):
+- semantics → color (`ConversationLine` / `PhaseDivider` / `FindingRow` parity):
   - `Row` gained `Sys`, `Finding`, and `Verdict` variants so engine semantics are no longer
     flattened into undifferentiated dim notes.
   - **phase dividers** now draw `── label ─────…`, a muted rule that **fills the pane width**.
@@ -55,9 +55,9 @@ turns semantics into color, faithfully to the imported primitives.
     voice-colors `claude`/`codex`/`local` and right-aligns its status.
   - the `✎` file-change and `✓` done glyphs now fall back correctly under `DUET_NO_ICONS`.
 
-verified with `cargo fmt`, `cargo clippy --all-targets` (zero warnings), and `cargo test`
-(the shell and viewer render to a ratatui `TestBackend`, so layout stays verifiable without
-a terminal).
+verified with `cargo clippy --all-targets` (zero warnings) and `cargo test`; its changed
+files were formatted with `cargo fmt` (the shell and viewer render to a ratatui
+`TestBackend`, so layout stays verifiable without a terminal).
 
 ## 4. docs
 

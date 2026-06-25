@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/duet-hero.svg" alt="duet — a symphony of models · many voices, one score" width="100%">
+  <img src="assets/duet-hero.svg" alt="duet · a symphony of models · many voices, one score" width="100%">
 </p>
 
 <p align="center">
@@ -21,7 +21,7 @@ the premise is narrow and testable. a model that reviews its own output carries 
 blind spots that produced it. a model from a different lineage tends to fail in different
 places, so cross-vendor review surfaces defects that single-model self-review does not.
 duet pairs Claude Code (🎤 builder) with OpenAI Codex (🎧 critic) by default, and can
-route any role — including a third opinion — to a local model served over an
+route any role, including a third opinion, to a local model served over an
 OpenAI-compatible API.
 
 ## how it works
@@ -32,19 +32,19 @@ OpenAI-compatible API.
 
 a run moves through fixed phases. the builder drafts a **plan**; the critic **red-teams**
 it; the builder **builds**; then **review ⇄ fix** alternate over bounded rounds, always
-finishing on a review. convergence is decided by an **objective gate** — a test command, a
-citation check, or a harness smoke test — not by a model grading itself. when the gate is
+finishing on a review. convergence is decided by an **objective gate** (a test command, a
+citation check, or a harness smoke test), not by a model grading itself. when the gate is
 green and the critic has no blocking objections, the ensemble is **🎵 in harmony**.
 
 ## conductor mode
 
-the default loop is **adversarial** — builder versus critic. conductor mode is a second,
+the default loop is **adversarial**, builder versus critic. conductor mode is a second,
 **collaborative** ensemble for tasks too long-horizon for a single build pass. it splits the
 work across two models with complementary strengths: a **strategist** that is thorough and
 holds the long-horizon goal without losing the thread, and an **implementer** that is
 resourceful tactically but tends to stop early. the strategist studies the repo (read-only),
-writes the plan, and hands the implementer **one narrow, pointed objective** at a time —
-naming the specific files and what "done" means for that step — because a pointed task is one
+writes the plan, and hands the implementer **one narrow, pointed objective** at a time
+(naming the specific files and what "done" means for that step), because a pointed task is one
 the implementer finishes, while the whole codebase at once is one it only scratches. after
 each implementer pass the strategist re-reads the cumulative diff, judges real progress
 against the goal, and either re-points or declares the goal met. the adversarial critic then
@@ -55,8 +55,9 @@ strategize → (implement ⇄ re-direct)* → critic gate → verify
 ```
 
 the strategist never edits; the implementer never plans the whole task. roles are configured
-per profile and neither vendor is the privileged director — run `duet run --conductor` with
-`--strategist`/`--builder`, or apply `conductor-codex-lead` / `conductor-claude-lead`.
+per profile and neither vendor is the privileged director. run `duet run --conductor`,
+setting the strategist with `--strategist` and the implementer with `--builder`, or apply
+`conductor-codex-lead` / `conductor-claude-lead`.
 
 ## built with duet
 
@@ -67,7 +68,7 @@ study, and its integration tests parse real CLI output captured during that deve
 
 ## the interactive shell
 
-running `duet` with no arguments opens a full-screen terminal application — a header, a
+running `duet` with no arguments opens a full-screen terminal application with a header, a
 scrolling color-guttered conversation, and an input box. plain text is treated as chat;
 `/` opens a command palette; `/run <task>` starts the full workflow. each voice speaks in
 its own hue, carried down the left of every line.
@@ -83,11 +84,11 @@ its own hue, carried down the left of every line.
   model grading itself.
 - **conductor mode (strategist ⟶ implementer).** a second ensemble shape for long-horizon
   work: a *strategist* model holds the goal and re-points a tactical *implementer* model at
-  one narrow, well-scoped objective at a time — never the whole codebase at once — until the
+  one narrow, well-scoped objective at a time, never the whole codebase at once, until the
   goal is genuinely met, with the critic gating the result. the strategist reads and directs;
   the implementer writes. roles are assignable per profile (`conductor-codex-lead`,
   `conductor-claude-lead`); neither vendor is privileged as the strategist.
-- **interactive shell.** the full-screen app described above — chat, a `/` command
+- **interactive shell.** the full-screen app described above, offering chat, a `/` command
   palette, and `/run <task>` for the whole plan → build → review ⇄ fix → verify loop.
 - **three domains.** `code` runs the build-and-review loop. `research` gathers sources and
   verifies each claim against its citation. `security` builds forensics,
@@ -150,14 +151,41 @@ duet run --conductor --strategist codex --builder claude "<a large, multi-step t
 duet run --profile conductor-claude-lead "<a large, multi-step task>"
 ```
 
+> the `security` domain treats every input as live malware: it works on copies, records
+> each input's SHA-256 for evidence integrity, never detonates a sample outside an isolated
+> sandbox, and avoids network egress. the objective gate is the harness's own smoke test
+> against a benign fixture, never a real sample.
+
+### commands
+
+the bare `duet` opens the interactive shell; the rest are subcommands.
+
+| command | what it does |
+|---|---|
+| `duet` | open the interactive shell, from inside a git repo |
+| `duet run <task>` | full loop: plan → red-team → build → review ⇄ fix → verify |
+| `duet review` | review and fix the current uncommitted changes, no plan |
+| `duet plan <task>` | plan and red-team only, no code written |
+| `duet tui [--snapshot]` | rich viewer of a run's conversation (`--snapshot` renders one frame) |
+| `duet watch` | follow a duet running in another terminal, rendering live |
+| `duet replay <path>` | re-render a saved conversation (a `.duet` dir or a stream file) |
+| `duet show` | print the last run's `SUMMARY.md` |
+| `duet log` | print the last run's transcript |
+| `duet doctor` | check prerequisites (claude, codex, login, git) |
+| `duet suggest-models [--domain <d>]` | probe the host and recommend local models that fit |
+| `duet local-review` | critique the current git diff with a local model |
+| `duet profiles` | list available profiles |
+
 ### shell commands
 
 | command | description |
 |---|---|
 | `<text>` | chat with the default model |
+| `/chat <text>` | force chat, even when the text reads like a build task |
 | `/run <task>` | full workflow: plan → build → review ⇄ fix → verify |
 | `/review [text]`, `/plan <text>` | review only, or plan only |
 | `/domain code\|research\|security` | switch domain |
+| `/repo <path>` | switch the working repository for the session |
 | `/builder claude\|codex`, `/critic claude\|codex\|local` | reassign a role |
 | `/conductor`, `/strategist claude\|codex` | toggle conductor mode / set the director |
 | `/profile <name>`, `/profiles` | apply or list ensembles |
@@ -210,24 +238,40 @@ reviews, in `duet-agents`. adding a workflow is a single `Domain` implementation
 | `DUET_LOCAL_MODEL`, `LOCAL_API_KEY` | local model id and API key |
 | `DUET_PROFILES` | path to a profiles TOML that overrides the default location |
 | `DUET_PROMPTS` | directory of prompt-template overrides |
+| `DUET_TEST_TIMEOUT` | seconds before the objective-gate test command is killed (default 600) |
 | `DUET_NO_ICONS` | disable Nerd-Font file icons and use plain glyphs |
 | `COLORTERM` | `truecolor` / `24bit` selects exact brand hex; otherwise the TUI falls back to ANSI-256 |
 | `NO_COLOR` | disable ANSI color |
 
+## troubleshooting
+
+run `duet doctor` first. it checks the prerequisites below and reports what is missing.
+
+- **claude or codex not found, or not logged in.** install the CLI and authenticate it, or
+  point duet at an existing binary with `CLAUDE_BIN` / `CODEX_BIN`.
+- **"not a git repository".** the `code` and `security` domains diff the working tree, so
+  run them from inside a git repo.
+- **a local-model role won't connect.** start an OpenAI-compatible server, set
+  `DUET_LOCAL_BASE_URL` (default `http://localhost:1234/v1`), `DUET_LOCAL_MODEL`, and
+  `LOCAL_API_KEY`, then `duet suggest-models` to pick one that fits the host.
+- **colors look flat.** exact brand hex needs `COLORTERM=truecolor` or `24bit`; otherwise
+  the TUI uses ANSI-256 by design. `NO_COLOR` disables color, and `DUET_NO_ICONS` swaps
+  Nerd-Font glyphs for plain text.
+
 ## design
 
 duet has a small, deliberate brand: dark, monospace, terminal-first, organized around a
-musical **duet** metaphor — two voices, color-guttered, iterating until they're in harmony.
+musical **duet** metaphor, two voices, color-guttered, iterating until they're in harmony.
 the visual language is documented in [`docs/brand.md`](docs/brand.md), and the marks live
 in [`assets/`](assets/) (regenerate the README graphics with `python3 assets/generate.py`).
-the redesign that produced the current look — UI, README, and graphics — is written up in
+the redesign that produced the current look (UI, README, and graphics) is written up in
 [`docs/REDESIGN.md`](docs/REDESIGN.md).
 
 | color | hex | role |
 |---|---|---|
 | violet | `#A884FF` | builder voice / primary accent |
 | azure | `#3AA0FF` | critic voice / secondary accent |
-| periwinkle | `#8787FF` | UI accent — the `♫ duet` badge, input border, palette |
+| periwinkle | `#8787FF` | UI accent for the `♫ duet` badge, input border, palette |
 | claude / codex / local | `#AF87FF` / `#00AFFF` / `#00D7D7` | the per-voice gutters |
 
 ## development
@@ -242,6 +286,9 @@ the event layer is tested offline against real captured CLI streams in
 `crates/duet-core/tests/fixtures/`. the terminal interfaces render to a ratatui
 `TestBackend`, so layout is verified without a live terminal.
 
+the crates are workspace-internal (`publish = false`), so they are not on docs.rs; read
+their API docs locally with `cargo doc --no-deps --open`.
+
 ## contributing
 
 see [CONTRIBUTING.md](CONTRIBUTING.md). issues and pull requests are welcome.
@@ -252,4 +299,4 @@ MIT. Copyright 2026 CYBERSLOP. See [LICENSE](LICENSE).
 
 ---
 
-<p align="center"><sub>♪ ♫ ♬ &nbsp; a symphony of models — many voices, one score &nbsp; ♬ ♫ ♪</sub></p>
+<p align="center"><sub>♪ ♫ ♬ &nbsp; a symphony of models · many voices, one score &nbsp; ♬ ♫ ♪</sub></p>

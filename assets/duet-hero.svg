@@ -16,7 +16,7 @@
     <path d="M60 104 A36 36 0 0 0 60 32" stroke="url(#mah)" stroke-width="17" stroke-linecap="round"/>
   </g>
 <text x="250" y="178" fill="url(#wmh)" font-size="116" font-weight="800" letter-spacing="-2">duet</text>
-<text x="252" y="224" fill="#AAB0C2" font-size="21" font-weight="500" text-anchor="start" letter-spacing="0" >a symphony of models — many voices, one score</text>
+<text x="252" y="224" fill="#AAB0C2" font-size="21" font-weight="500" text-anchor="start" letter-spacing="0" >a symphony of models · many voices, one score</text>
 <text x="252" y="258" fill="#6B7282" font-size="16" font-weight="400" text-anchor="start" letter-spacing="0" ><tspan fill="#AF87FF">builder</tspan> writes  ·  <tspan fill="#00AFFF">critic</tspan> from a different lab reviews  ·  they iterate until they’re <tspan fill="#3FB950">in harmony</tspan></text>
 <text x="96" y="296" fill="#6B7282" font-size="13" font-weight="400" text-anchor="start" letter-spacing="0" >♪ ♫ ♬   adversarial, cross-model AI development for the command line</text>
   <line x1="880" y1="210.5" x2="1239" y2="210.5" stroke="#262B3A" stroke-width="1"/>

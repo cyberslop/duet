@@ -16,7 +16,7 @@
     <path d="M60 104 A36 36 0 0 0 60 32" stroke="url(#mas)" stroke-width="17" stroke-linecap="round"/>
   </g>
 <text x="640.0" y="372" fill="url(#wms)" font-size="150" font-weight="800" letter-spacing="-3" text-anchor="middle">duet</text>
-<text x="640.0" y="430" fill="#AAB0C2" font-size="27" font-weight="500" text-anchor="middle" letter-spacing="0" >a symphony of models — many voices, one score</text>
+<text x="640.0" y="430" fill="#AAB0C2" font-size="27" font-weight="500" text-anchor="middle" letter-spacing="0" >a symphony of models · many voices, one score</text>
 <text x="640.0" y="470" fill="#6B7282" font-size="18" font-weight="400" text-anchor="middle" letter-spacing="0" >one model writes · a model from a <tspan fill="#00AFFF">different lab</tspan> reviews · until they’re <tspan fill="#3FB950">in harmony</tspan></text>
   <line x1="442.0" y1="548.5" x2="834.0" y2="548.5" stroke="#262B3A" stroke-width="1"/>
   <g transform="translate(442.0,548)"><rect x="0" y="-50.8" width="8" height="50.8" rx="2" fill="#3AA0FF"></rect></g>
