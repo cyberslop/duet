@@ -139,7 +139,7 @@ def hero():
     body.append(f'  <rect x="0" y="0" width="{W}" height="3" fill="url(#seam)"/>')
     body.append(mark(96, 108, 104, "h"))
     body.append(wm)
-    body.append(text(252, 224, esc("a symphony of models — many voices, one score"),
+    body.append(text(252, 224, esc("a symphony of models · many voices, one score"),
                      fill=TX2, size=21, weight=500))
     body.append(text(252, 258,
                      f'<tspan fill="{V_CLAUDE}">builder</tspan> writes  ·  '
@@ -288,7 +288,7 @@ def social():
     # center the wordmark
     body.append(f'<text x="{W/2}" y="372" fill="url(#wms)" font-size="150" font-weight="800" '
                 f'letter-spacing="-3" text-anchor="middle">duet</text>')
-    body.append(text(W / 2, 430, esc("a symphony of models — many voices, one score"),
+    body.append(text(W / 2, 430, esc("a symphony of models · many voices, one score"),
                      fill=TX2, size=27, weight=500, anchor="middle"))
     body.append(text(W / 2, 470,
                      f'one model writes · a model from a <tspan fill="{V_CODEX}">different lab</tspan> reviews · '
