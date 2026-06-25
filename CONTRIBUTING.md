@@ -8,22 +8,33 @@ the conventions we follow, and where things live.
 ```bash
 git clone https://github.com/cyberslop/duet.git
 cd duet
-cargo build
-cargo test
-cargo clippy --all-targets
+cargo build --workspace --all-targets --locked
+cargo test --workspace --locked
+cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
 ```
+
+These match what CI runs. The `--locked` flag matters: without it a stale `Cargo.lock`
+passes locally but fails CI.
 
 You'll also want the CLIs `duet` drives: [Claude Code](https://claude.com/claude-code)
 (`claude`) and the [OpenAI Codex CLI](https://github.com/openai/codex) (`codex`), both
 logged in. `duet doctor` verifies your environment. A local OpenAI-compatible server
 (e.g. [LM Studio](https://lmstudio.ai)) is optional, for local-model work.
 
+The build lands the `duet` binary at `target/debug/duet` (or `target/release/duet` with
+`--release`); that is the binary the Dogfooding section below runs.
+
 ## Before you open a PR
 
-- **`cargo test` is green** and **`cargo clippy --all-targets` is clean** (zero
-  warnings, which is the bar).
+- **`cargo test --workspace --locked` is green** and **`cargo clippy --workspace
+  --all-targets --all-features --locked -- -D warnings` is clean** (zero warnings is the
+  bar). These two are the required CI checks (`Test` and `Clippy`); the `Coverage` job is
+  informational and will not block a merge.
+- **Work on a feature branch off `main` and open a PR.** `main` is protected, so direct
+  pushes are rejected. A PR merges once the required checks pass, all conversations are
+  resolved, and one maintainer approves.
 - **Format your changed files** before committing (e.g. `cargo fmt -p <crate>`). The
-  workspace isn't fully rustfmt-clean yet, so avoid a repo-wide `cargo fmt` — it would
+  workspace isn't fully rustfmt-clean yet, so avoid a repo-wide `cargo fmt`, which would
   reformat unrelated files and bury your change.
 - New behavior comes with a test. The event layer is tested against real captured CLI
   streams in `crates/duet-core/tests/fixtures/`; TUI changes are tested by rendering to

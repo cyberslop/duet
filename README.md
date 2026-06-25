@@ -55,8 +55,9 @@ strategize → (implement ⇄ re-direct)* → critic gate → verify
 ```
 
 the strategist never edits; the implementer never plans the whole task. roles are configured
-per profile and neither vendor is the privileged director. run `duet run --conductor` with
-`--strategist`/`--builder`, or apply `conductor-codex-lead` / `conductor-claude-lead`.
+per profile and neither vendor is the privileged director. run `duet run --conductor`,
+setting the strategist with `--strategist` and the implementer with `--builder`, or apply
+`conductor-codex-lead` / `conductor-claude-lead`.
 
 ## built with duet
 
@@ -150,14 +151,41 @@ duet run --conductor --strategist codex --builder claude "<a large, multi-step t
 duet run --profile conductor-claude-lead "<a large, multi-step task>"
 ```
 
+> the `security` domain treats every input as live malware: it works on copies, records
+> each input's SHA-256 for evidence integrity, never detonates a sample outside an isolated
+> sandbox, and avoids network egress. the objective gate is the harness's own smoke test
+> against a benign fixture, never a real sample.
+
+### commands
+
+the bare `duet` opens the interactive shell; the rest are subcommands.
+
+| command | what it does |
+|---|---|
+| `duet` | open the interactive shell, from inside a git repo |
+| `duet run <task>` | full loop: plan → red-team → build → review ⇄ fix → verify |
+| `duet review` | review and fix the current uncommitted changes, no plan |
+| `duet plan <task>` | plan and red-team only, no code written |
+| `duet tui [--snapshot]` | rich viewer of a run's conversation (`--snapshot` renders one frame) |
+| `duet watch` | follow a duet running in another terminal, rendering live |
+| `duet replay <path>` | re-render a saved conversation (a `.duet` dir or a stream file) |
+| `duet show` | print the last run's `SUMMARY.md` |
+| `duet log` | print the last run's transcript |
+| `duet doctor` | check prerequisites (claude, codex, login, git) |
+| `duet suggest-models [--domain <d>]` | probe the host and recommend local models that fit |
+| `duet local-review` | critique the current git diff with a local model |
+| `duet profiles` | list available profiles |
+
 ### shell commands
 
 | command | description |
 |---|---|
 | `<text>` | chat with the default model |
+| `/chat <text>` | force chat, even when the text reads like a build task |
 | `/run <task>` | full workflow: plan → build → review ⇄ fix → verify |
 | `/review [text]`, `/plan <text>` | review only, or plan only |
 | `/domain code\|research\|security` | switch domain |
+| `/repo <path>` | switch the working repository for the session |
 | `/builder claude\|codex`, `/critic claude\|codex\|local` | reassign a role |
 | `/conductor`, `/strategist claude\|codex` | toggle conductor mode / set the director |
 | `/profile <name>`, `/profiles` | apply or list ensembles |
@@ -210,9 +238,25 @@ reviews, in `duet-agents`. adding a workflow is a single `Domain` implementation
 | `DUET_LOCAL_MODEL`, `LOCAL_API_KEY` | local model id and API key |
 | `DUET_PROFILES` | path to a profiles TOML that overrides the default location |
 | `DUET_PROMPTS` | directory of prompt-template overrides |
+| `DUET_TEST_TIMEOUT` | seconds before the objective-gate test command is killed (default 600) |
 | `DUET_NO_ICONS` | disable Nerd-Font file icons and use plain glyphs |
 | `COLORTERM` | `truecolor` / `24bit` selects exact brand hex; otherwise the TUI falls back to ANSI-256 |
 | `NO_COLOR` | disable ANSI color |
+
+## troubleshooting
+
+run `duet doctor` first. it checks the prerequisites below and reports what is missing.
+
+- **claude or codex not found, or not logged in.** install the CLI and authenticate it, or
+  point duet at an existing binary with `CLAUDE_BIN` / `CODEX_BIN`.
+- **"not a git repository".** the `code` and `security` domains diff the working tree, so
+  run them from inside a git repo.
+- **a local-model role won't connect.** start an OpenAI-compatible server, set
+  `DUET_LOCAL_BASE_URL` (default `http://localhost:1234/v1`), `DUET_LOCAL_MODEL`, and
+  `LOCAL_API_KEY`, then `duet suggest-models` to pick one that fits the host.
+- **colors look flat.** exact brand hex needs `COLORTERM=truecolor` or `24bit`; otherwise
+  the TUI uses ANSI-256 by design. `NO_COLOR` disables color, and `DUET_NO_ICONS` swaps
+  Nerd-Font glyphs for plain text.
 
 ## design
 
@@ -241,6 +285,9 @@ cargo build --release
 the event layer is tested offline against real captured CLI streams in
 `crates/duet-core/tests/fixtures/`. the terminal interfaces render to a ratatui
 `TestBackend`, so layout is verified without a live terminal.
+
+the crates are workspace-internal (`publish = false`), so they are not on docs.rs; read
+their API docs locally with `cargo doc --no-deps --open`.
 
 ## contributing
 

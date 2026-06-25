@@ -45,7 +45,7 @@ turns semantics into color, faithfully to the imported primitives.
   accents, semantics, text, borders, severity, and file-type accents, each exact hex on
   truecolor terminals and the sampled ANSI-256 index otherwise. it replaces every scattered
   `Color::Indexed(...)` literal in the shell and viewer.
-- **semantics → color** (`ConversationLine` / `PhaseDivider` / `FindingRow` parity):
+- semantics → color (`ConversationLine` / `PhaseDivider` / `FindingRow` parity):
   - `Row` gained `Sys`, `Finding`, and `Verdict` variants so engine semantics are no longer
     flattened into undifferentiated dim notes.
   - **phase dividers** now draw `── label ─────…`, a muted rule that **fills the pane width**.
@@ -55,9 +55,9 @@ turns semantics into color, faithfully to the imported primitives.
     voice-colors `claude`/`codex`/`local` and right-aligns its status.
   - the `✎` file-change and `✓` done glyphs now fall back correctly under `DUET_NO_ICONS`.
 
-verified with `cargo fmt`, `cargo clippy --all-targets` (zero warnings), and `cargo test`
-(the shell and viewer render to a ratatui `TestBackend`, so layout stays verifiable without
-a terminal).
+verified with `cargo clippy --all-targets` (zero warnings) and `cargo test`; its changed
+files were formatted with `cargo fmt` (the shell and viewer render to a ratatui
+`TestBackend`, so layout stays verifiable without a terminal).
 
 ## 4. docs
 
