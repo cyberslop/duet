@@ -62,7 +62,7 @@ jobs:
           rustup toolchain install stable --profile minimal --component llvm-tools-preview --no-self-update
           rustup default stable
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
-      - uses: taiki-e/install-action@ace6ebe54a6a0c86dfb5f7764b17f793b6925bc3 # v2
+      - uses: taiki-e/install-action@16b05812d776ae1dfaabc8277e421fb6d2506419 # v2
         with:
           tool: cargo-llvm-cov
       - name: Coverage summary
